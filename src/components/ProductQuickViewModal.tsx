@@ -36,22 +36,23 @@ export function ProductQuickViewModal({
       aria-modal="true"
       aria-labelledby="quick-view-title"
     >
-      <div className="relative w-full max-w-4xl bg-[#FAF8F4] border border-[#DED7C8] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 max-h-[92vh]">
+      <div className="relative w-full max-w-4xl bg-[#FAF8F4] border border-[#DED7C8] shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 max-h-[92dvh] overflow-y-auto md:overflow-hidden">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close product view"
-          className="absolute top-4 right-4 z-10 h-9 w-9 flex items-center justify-center bg-[#0B0B0D]/80 text-[#FAF8F4] hover:bg-[#0B0B0D] cursor-pointer"
+          className="absolute top-3 right-3 z-10 h-11 w-11 flex items-center justify-center bg-[#0B0B0D]/85 text-[#FAF8F4] hover:bg-[#0B0B0D] cursor-pointer"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Left: Studio Photography */}
-        <div className="md:col-span-7 bg-[#EFECE4] aspect-[4/3] md:aspect-auto md:min-h-[440px]">
+        <div className="md:col-span-7 bg-[#EFECE4] aspect-[4/3] max-h-[38dvh] md:max-h-none md:aspect-auto md:min-h-[440px]">
           <ResilientImage
             src={product.image}
             alt={product.name}
             fallbackTitle={product.name}
+            priority
             className="w-full h-full object-cover"
           />
         </div>

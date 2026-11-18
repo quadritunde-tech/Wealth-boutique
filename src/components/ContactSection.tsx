@@ -207,7 +207,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                     placeholder="e.g. Tunde Adebayo"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -220,7 +220,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                     placeholder="+234 803 000 0000"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                         setSelectedOption(prod.options[0]);
                       }
                     }}
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   >
                     <option value="General Boutique Enquiry">General Boutique Enquiry</option>
                     {products.map((p) => (
@@ -258,7 +258,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                   <select
                     value={selectedOption}
                     onChange={(e) => setSelectedOption(e.target.value)}
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   >
                     {availableOptions.map((opt) => (
                       <option key={opt} value={opt}>
@@ -278,7 +278,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                   placeholder="Share your preferred delivery location, event date, or fit notes..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 />
               </div>
 

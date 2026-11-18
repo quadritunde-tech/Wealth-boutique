@@ -4,6 +4,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import zlib from 'zlib';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import { INITIAL_PRODUCTS } from './src/data/seedCatalog.ts';
@@ -172,6 +173,75 @@ async function startServer() {
   const app = express();
 
   app.use(express.json({ limit: '8mb' }));
+
+  // Lightweight built-in gzip compression for fast API & HTML delivery
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    if (
+      typeof acceptEncoding !== 'string' ||
+      !acceptEncoding.includes('gzip') ||
+      req.path.startsWith('/src/assets/images/')
+    ) {
+      next();
+      return;
+    }
+
+    const originalJson = res.json.bind(res);
+    res.json = (body: unknown) => {
+      const jsonStr = JSON.stringify(body);
+      if (jsonStr.length < 1024) {
+        return originalJson(body);
+      }
+      const compressed = zlib.gzipSync(Buffer.from(jsonStr, 'utf-8'));
+      res.setHeader('Content-Encoding', 'gzip');
+      res.setHeader('Vary', 'Accept-Encoding');
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      return res.send(compressed);
+    };
+    next();
+  });
+
+  // Cache product & hero photography for 7 days for instant repeat loads
+  app.use('/src/assets/images', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
+    next();
+  });
+
+  // Dynamic SEO robots.txt and sitemap.xml
+  app.get('/robots.txt', (req, res) => {
+    const baseUrl =
+      process.env.APP_URL || `${req.protocol}://${req.get('host') || 'localhost:3000'}`;
+    res.type('text/plain').send(
+      [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin',
+        `Sitemap: ${baseUrl.replace(/\/+$/, '')}/sitemap.xml`,
+      ].join('\n')
+    );
+  });
+
+  app.get('/sitemap.xml', (req, res) => {
+    const baseUrl = (
+      process.env.APP_URL || `${req.protocol}://${req.get('host') || 'localhost:3000'}`
+    ).replace(/\/+$/, '');
+    const routes = ['/', '/shop', '/about', '/contact'];
+    const lastMod = new Date().toISOString().split('T')[0];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${routes
+  .map(
+    (route, idx) => `  <url>
+    <loc>${baseUrl}${route}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>${route === '/shop' ? 'daily' : 'weekly'}</changefreq>
+    <priority>${idx === 0 ? '1.0' : '0.8'}</priority>
+  </url>`
+  )
+  .join('\n')}
+</urlset>`;
+    res.type('application/xml').send(xml);
+  });
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', store: 'Wealth Fashion Boutique' });
@@ -566,7 +636,16 @@ ${catalogContext}`;
   // Vite dev middleware or production static serving
   if (process.env.NODE_ENV === 'production') {
     const distPath = path.join(__dirname, 'dist');
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        maxAge: '30d',
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache');
+          }
+        },
+      })
+    );
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

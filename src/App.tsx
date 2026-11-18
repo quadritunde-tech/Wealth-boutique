@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,14 +12,8 @@ import {
   X,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AdminDashboard } from './components/AdminDashboard.tsx';
-import { CartDrawer } from './components/CartDrawer.tsx';
-import { ContactSection } from './components/ContactSection.tsx';
-import { OrderModal } from './components/OrderModal.tsx';
 import { ProductCard } from './components/ProductCard.tsx';
-import { ProductQuickViewModal } from './components/ProductQuickViewModal.tsx';
 import { ResilientImage } from './components/ResilientImage.tsx';
-import { WealthStylistDrawer } from './components/WealthStylistDrawer.tsx';
 import {
   ATELIER_IMAGE,
   BUSINESS_INFO,
@@ -36,8 +30,67 @@ import {
 } from './types.ts';
 import { buildWhatsAppUrl } from './utils/format.ts';
 
+// Code-split drawers, modals, contact form & private admin portal for ultra-fast initial load
+const AdminDashboard = lazy(() =>
+  import('./components/AdminDashboard.tsx').then((m) => ({ default: m.AdminDashboard }))
+);
+const CartDrawer = lazy(() =>
+  import('./components/CartDrawer.tsx').then((m) => ({ default: m.CartDrawer }))
+);
+const ContactSection = lazy(() =>
+  import('./components/ContactSection.tsx').then((m) => ({ default: m.ContactSection }))
+);
+const OrderModal = lazy(() =>
+  import('./components/OrderModal.tsx').then((m) => ({ default: m.OrderModal }))
+);
+const ProductQuickViewModal = lazy(() =>
+  import('./components/ProductQuickViewModal.tsx').then((m) => ({
+    default: m.ProductQuickViewModal,
+  }))
+);
+const WealthStylistDrawer = lazy(() =>
+  import('./components/WealthStylistDrawer.tsx').then((m) => ({
+    default: m.WealthStylistDrawer,
+  }))
+);
+
 const CART_STORAGE_KEY = 'wfb_shopping_cart_v1';
 const PRODUCTS_CACHE_KEY = 'wfb_products_cache_v2';
+
+const SEO_PAGE_META: Record<
+  PageView,
+  { title: string; description: string; robots: string }
+> = {
+  home: {
+    title: 'Wealth Fashion Boutique – Luxury Ibadan Clothing, Shoes & Caps',
+    description:
+      'Shop affordable luxury clothes, Italian calfskin shoes, and signature caps for men and women in Bodija, Ibadan. Order online or via WhatsApp.',
+    robots: 'index, follow',
+  },
+  shop: {
+    title: 'Shop Luxury Clothes, Shoes & Caps – Wealth Fashion Boutique',
+    description:
+      'Browse bespoke Agbada, Senator suits, velvet blazers, calfskin shoes, and velvet Fila caps in Naira. Same-day delivery across Ibadan and nationwide.',
+    robots: 'index, follow',
+  },
+  about: {
+    title: 'Our Story – Wealth Fashion Boutique Ibadan Atelier',
+    description:
+      'Discover Wealth Fashion Boutique in Bodija, Ibadan: affordable luxury menswear, womenswear, handcrafted footwear, and signature headwear.',
+    robots: 'index, follow',
+  },
+  contact: {
+    title: 'Contact & Visit Us in Ibadan – Wealth Fashion Boutique',
+    description:
+      'Visit Plot 14 Awolowo Avenue, Bodija, Ibadan or message our WhatsApp concierge (+234 904 755 2985) for bespoke fittings and express orders.',
+    robots: 'index, follow',
+  },
+  admin: {
+    title: 'Owner Portal – Wealth Fashion Boutique',
+    description: 'Private owner management dashboard for Wealth Fashion Boutique.',
+    robots: 'noindex, nofollow',
+  },
+};
 
 function getPageFromPathname(pathname: string): PageView {
   const clean = pathname.toLowerCase().replace(/\/+$/, '') || '/';
@@ -109,6 +162,81 @@ export default function App() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+
+  // Sync per-route SEO tags, canonical URL, OpenGraph & Twitter tags
+  useEffect(() => {
+    const meta = SEO_PAGE_META[page];
+    document.title = meta.title;
+
+    const currentUrl = window.location.origin + window.location.pathname;
+    const setMetaTag = (attr: 'name' | 'property', key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    setMetaTag('name', 'description', meta.description);
+    setMetaTag('name', 'robots', meta.robots);
+    setMetaTag('property', 'og:title', meta.title);
+    setMetaTag('property', 'og:description', meta.description);
+    setMetaTag('property', 'og:url', currentUrl);
+    setMetaTag('name', 'twitter:title', meta.title);
+    setMetaTag('name', 'twitter:description', meta.description);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', currentUrl);
+  }, [page]);
+
+  // Inject dynamic Product ItemList JSON-LD for rich e-commerce search snippets
+  useEffect(() => {
+    if (page === 'admin' || products.length === 0) return;
+    const scriptId = 'wfb-catalog-jsonld';
+    let scriptEl = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (!scriptEl) {
+      scriptEl = document.createElement('script');
+      scriptEl.id = scriptId;
+      scriptEl.type = 'application/ld+json';
+      document.head.appendChild(scriptEl);
+    }
+    const itemList = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Wealth Fashion Boutique Catalogue',
+      itemListElement: products.slice(0, 15).map((p, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        item: {
+          '@type': 'Product',
+          name: p.name,
+          description: p.description,
+          category: p.category,
+          image: window.location.origin + p.image,
+          brand: {
+            '@type': 'Brand',
+            name: 'Wealth Fashion Boutique',
+          },
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'NGN',
+            price: String(p.price),
+            availability: p.inStock
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/PreOrder',
+          },
+        },
+      })),
+    };
+    scriptEl.text = JSON.stringify(itemList);
+  }, [products, page]);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -271,48 +399,65 @@ export default function App() {
     { label: 'Contact', target: 'contact' },
   ];
 
+  const anyOverlayOpen =
+    cartOpen ||
+    stylistOpen ||
+    Boolean(quickViewState.product) ||
+    Boolean(orderModalState.product);
+
   // Dedicated /admin URL View — completely separate from end-user storefront UI
   if (page === 'admin') {
     return (
-      <div className="min-h-screen flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
+      <div className="min-h-[100dvh] flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
         <header className="bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/25">
-          <div className="max-w-7xl mx-auto px-6 h-[68px] flex items-center justify-between gap-6">
-            <span className="font-serif text-xl font-semibold tracking-wide text-[#FAF8F4] whitespace-nowrap">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[68px] flex items-center justify-between gap-4">
+            <span className="font-serif text-lg sm:text-xl font-semibold tracking-wide text-[#FAF8F4] whitespace-nowrap truncate">
               Wealth Fashion · Owner Portal
             </span>
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-[#C6A254] hover:text-white transition-colors whitespace-nowrap cursor-pointer"
+              className="min-h-[44px] inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-[#C6A254] hover:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Storefront</span>
+              <span>Storefront</span>
             </button>
           </div>
         </header>
         <main className="flex-1">
-          <AdminDashboard products={products} onRefreshProducts={fetchProducts} />
+          <Suspense
+            fallback={
+              <div className="max-w-7xl mx-auto px-6 py-24 text-center text-sm text-[#6B665C]">
+                Loading owner dashboard...
+              </div>
+            }
+          >
+            <AdminDashboard products={products} onRefreshProducts={fetchProducts} />
+          </Suspense>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
+    <div className="min-h-[100dvh] flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
       {/* TOP NAVIGATION BAR — Strict 3-Zone Contract, Zero Admin Link */}
       <header className="sticky top-0 z-40 bg-[#0B0B0D]/95 backdrop-blur-md text-[#FAF8F4] border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 h-[74px] flex items-center justify-between gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[74px] flex items-center justify-between gap-4 sm:gap-8">
           {/* Zone 1: Single-line Wordmark */}
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="font-serif text-2xl font-semibold tracking-tight text-[#FAF8F4] hover:text-[#C6A254] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            className="font-serif text-xl sm:text-2xl font-semibold tracking-tight text-[#FAF8F4] hover:text-[#C6A254] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
             Wealth Fashion
           </button>
 
           {/* Zone 2: 4 clean single-line text nav links */}
-          <nav className="hidden md:flex items-center gap-9 text-[11px] uppercase tracking-[0.18em] font-medium text-[#FAF8F4]/75">
+          <nav
+            aria-label="Primary"
+            className="hidden md:flex items-center gap-9 text-[11px] uppercase tracking-[0.18em] font-medium text-[#FAF8F4]/75"
+          >
             {publicNavItems.map((item) => {
               const active = page === item.target;
               return (
@@ -332,12 +477,12 @@ export default function App() {
             })}
           </nav>
 
-          {/* Zone 3: 1 primary action (Shopping Bag) */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Zone 3: 1 primary action (Shopping Bag) + mobile menu button */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="min-h-[40px] px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+              className="min-h-[42px] px-3.5 sm:px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="tabular-nums">Bag ({cartCount})</span>
@@ -347,7 +492,8 @@ export default function App() {
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label="Toggle navigation menu"
-              className="md:hidden p-2 text-[#FAF8F4] hover:text-[#C6A254] cursor-pointer"
+              aria-expanded={mobileMenuOpen}
+              className="md:hidden h-11 w-11 flex items-center justify-center text-[#FAF8F4] hover:text-[#C6A254] cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -356,13 +502,16 @@ export default function App() {
 
         {/* Mobile Drawer Nav */}
         {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-white/10 bg-[#0B0B0D] px-6 py-4 flex flex-col gap-1">
+          <nav
+            aria-label="Mobile navigation"
+            className="md:hidden border-t border-white/10 bg-[#0B0B0D] px-4 py-3 flex flex-col"
+          >
             {publicNavItems.map((item) => (
               <button
                 key={item.target}
                 type="button"
                 onClick={() => navigateTo(item.target)}
-                className={`text-left py-3 text-xs uppercase tracking-[0.18em] font-medium border-b border-white/5 ${
+                className={`min-h-[46px] text-left px-2 text-xs uppercase tracking-[0.18em] font-medium border-b border-white/5 ${
                   page === item.target ? 'text-[#C6A254]' : 'text-[#FAF8F4]/85'
                 }`}
               >
@@ -377,10 +526,10 @@ export default function App() {
       {toastMessage && (
         <div
           role="status"
-          className="fixed top-22 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/40 shadow-xl text-xs font-medium"
+          className="fixed top-20 right-4 sm:right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/40 shadow-xl text-xs font-medium max-w-[calc(100vw-2rem)]"
         >
           <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{toastMessage}</span>
+          <span className="truncate">{toastMessage}</span>
         </div>
       )}
 
@@ -390,32 +539,32 @@ export default function App() {
           <>
             {/* HERO SECTION — Editorial Asymmetric Runway Showcase */}
             <section className="relative bg-[#0B0B0D] text-[#FAF8F4] overflow-hidden">
-              <div className="max-w-7xl mx-auto px-6 pt-10 pb-14 lg:py-0">
-                <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[540px] lg:min-h-[620px]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 lg:py-0">
+                <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[460px] lg:min-h-[620px]">
                   <motion.div
-                    initial={{ opacity: 0, y: 14 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="lg:col-span-5 flex flex-col justify-center py-8 lg:py-20 lg:pr-10 z-10"
+                    transition={{ duration: 0.3 }}
+                    className="lg:col-span-5 flex flex-col justify-center py-6 sm:py-8 lg:py-20 lg:pr-10 z-10 order-2 lg:order-1"
                   >
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-[#C6A254] font-semibold">
-                      Ibadan Flagship Atelier · Men & Women
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
+                      Ibadan Flagship Atelier · Men &amp; Women
                     </p>
-                    <h1 className="mt-4 font-serif text-[clamp(2.85rem,5vw,4.75rem)] font-medium leading-[1.02] tracking-tight text-balance">
+                    <h1 className="mt-3 sm:mt-4 font-serif text-[clamp(2.35rem,6vw,4.75rem)] font-medium leading-[1.04] tracking-tight text-balance">
                       Look Rich,{' '}
                       <span className="italic text-[#D8B973] font-normal">
                         Feel Confident
                       </span>
                     </h1>
-                    <p className="mt-6 text-[15px] text-[#FAF8F4]/72 leading-relaxed max-w-md">
+                    <p className="mt-4 sm:mt-6 text-sm sm:text-[15px] text-[#FAF8F4]/75 leading-relaxed max-w-md">
                       Bespoke black-and-gold Agbada, Italian calfskin footwear, and signature velvet headwear—curated in Bodija, Ibadan for effortless presence.
                     </p>
 
-                    <div className="mt-8 flex flex-wrap items-center gap-4">
+                    <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
                       <button
                         type="button"
                         onClick={() => navigateTo('shop', 'All')}
-                        className="min-h-[46px] px-7 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] transition-colors inline-flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
+                        className="min-h-[46px] px-7 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer"
                       >
                         <span>Explore Collection</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -423,7 +572,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setStylistOpen(true)}
-                        className="min-h-[46px] px-5 py-3 text-[11px] uppercase tracking-[0.16em] font-medium text-[#FAF8F4]/90 border-b border-[#C6A254]/50 hover:text-[#C6A254] hover:border-[#C6A254] transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                        className="min-h-[46px] px-5 py-3 text-[11px] uppercase tracking-[0.16em] font-medium text-[#FAF8F4]/90 border border-[#C6A254]/35 sm:border-0 sm:border-b sm:border-[#C6A254]/50 hover:text-[#C6A254] hover:border-[#C6A254] transition-colors inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-[#C6A254]" />
                         <span>Consult Wealth Stylist</span>
@@ -431,10 +580,13 @@ export default function App() {
                     </div>
                   </motion.div>
 
-                  <div className="lg:col-span-7 relative min-h-[340px] lg:min-h-[620px]">
+                  <div className="lg:col-span-7 relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[620px] order-1 lg:order-2">
                     <ResilientImage
                       src={HERO_IMAGE}
                       alt="Wealth Fashion Boutique Ibadan luxury black and gold couture couple"
+                      priority
+                      width={1280}
+                      height={720}
                       className="w-full h-full object-cover object-center"
                     />
                     <div
@@ -447,7 +599,7 @@ export default function App() {
 
               {/* Full-width 4-Column Atelier Strip below Hero */}
               <div className="border-t border-white/10 bg-[#101014]">
-                <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-2 lg:grid-cols-4 gap-6 lg:divide-x lg:divide-white/10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:divide-x lg:divide-white/10">
                   <div className="lg:pr-6">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
                       Ibadan Flagship
@@ -461,7 +613,7 @@ export default function App() {
                       Three Houses
                     </p>
                     <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                      Clothes, Shoes & Headwear
+                      Clothes, Shoes &amp; Headwear
                     </p>
                   </div>
                   <div className="lg:px-6">
@@ -469,7 +621,7 @@ export default function App() {
                       Express Courier
                     </p>
                     <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                      Same-Day Ibadan & Nationwide
+                      Same-Day Ibadan &amp; Nationwide
                     </p>
                   </div>
                   <div className="lg:pl-6">
@@ -485,27 +637,27 @@ export default function App() {
             </section>
 
             {/* EDITORIAL CATEGORY LOOKBOOK — Asymmetric Mosaic */}
-            <section className="max-w-7xl mx-auto px-6 py-20 lg:py-24">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-24">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                     The Boutique Houses
                   </p>
-                  <h2 className="mt-2 font-serif text-4xl font-medium text-[#0B0B0D]">
+                  <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
                     Curated By Discipline
                   </h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigateTo('shop', 'All')}
-                  className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B0B0D] hover:text-[#9D7B32] inline-flex items-center gap-2 cursor-pointer"
+                  className="min-h-[40px] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B0B0D] hover:text-[#9D7B32] inline-flex items-center gap-2 self-start sm:self-auto cursor-pointer"
                 >
                   <span>Explore All {products.length} Pieces</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              <div className="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
                 {/* Primary House: Clothes */}
                 <button
                   type="button"
@@ -518,12 +670,12 @@ export default function App() {
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-7 flex items-end justify-between gap-4 text-[#FAF8F4]">
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 flex items-end justify-between gap-4 text-[#FAF8F4]">
                     <div>
                       <p className="font-serif italic text-sm text-[#C6A254]">
                         {categoryPreviews[0].index} · {categoryPreviews[0].count} Pieces
                       </p>
-                      <h3 className="mt-1 font-serif text-3xl font-medium">
+                      <h3 className="mt-1 font-serif text-2xl sm:text-3xl font-medium">
                         {categoryPreviews[0].title}
                       </h3>
                       <p className="mt-1 text-xs text-[#FAF8F4]/75 max-w-sm">
@@ -535,13 +687,13 @@ export default function App() {
                 </button>
 
                 {/* Secondary Houses: Shoes & Caps */}
-                <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+                <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-5 sm:gap-6">
                   {categoryPreviews.slice(1).map((cat) => (
                     <button
                       key={cat.title}
                       type="button"
                       onClick={() => navigateTo('shop', cat.title)}
-                      className="group relative min-h-[218px] overflow-hidden bg-[#151519] text-left cursor-pointer"
+                      className="group relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[218px] overflow-hidden bg-[#151519] text-left cursor-pointer"
                     >
                       <ResilientImage
                         src={cat.image}
@@ -549,7 +701,7 @@ export default function App() {
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-6 flex items-end justify-between gap-4 text-[#FAF8F4]">
+                      <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-4 text-[#FAF8F4]">
                         <div>
                           <p className="font-serif italic text-sm text-[#C6A254]">
                             {cat.index} · {cat.count} Pieces
@@ -570,26 +722,26 @@ export default function App() {
             </section>
 
             {/* BEST SELLERS — Clean Gallery Grid */}
-            <section className="max-w-7xl mx-auto px-6 pb-20 lg:pb-24">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-20 lg:pb-24">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                     Most Requested
                   </p>
-                  <h2 className="mt-2 font-serif text-4xl font-medium text-[#0B0B0D]">
+                  <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
                     House Best Sellers
                   </h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigateTo('shop', 'All')}
-                  className="px-6 py-2.5 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors whitespace-nowrap cursor-pointer"
+                  className="min-h-[44px] px-6 py-2.5 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors self-start sm:self-auto whitespace-nowrap cursor-pointer"
                 >
                   View Full Catalogue
                 </button>
               </div>
 
-              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+              <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 sm:gap-y-12">
                 {bestSellers.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -602,14 +754,14 @@ export default function App() {
               </div>
             </section>
 
-            {/* WHY SHOP WITH US — Obsidian Editorial Manifesto (Zero Card Clones) */}
-            <section className="bg-[#0B0B0D] text-[#FAF8F4] py-20 lg:py-24">
-              <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* WHY SHOP WITH US — Obsidian Editorial Manifesto */}
+            <section className="bg-[#0B0B0D] text-[#FAF8F4] py-16 sm:py-20 lg:py-24">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
                 <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-28">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
                     The Wealth Standard
                   </p>
-                  <h2 className="font-serif text-4xl sm:text-5xl font-medium leading-[1.08] text-balance">
+                  <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium leading-[1.08] text-balance">
                     Tailored for Presence,{' '}
                     <span className="italic text-[#D8B973] font-normal">
                       Priced with Integrity
@@ -645,7 +797,7 @@ export default function App() {
                   ].map((pillar) => (
                     <div
                       key={pillar.num}
-                      className="py-7 grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-6 items-baseline"
+                      className="py-6 sm:py-7 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 items-baseline"
                     >
                       <span className="sm:col-span-2 font-serif italic text-2xl text-[#C6A254]">
                         {pillar.num}.
@@ -665,14 +817,14 @@ export default function App() {
             </section>
 
             {/* CLIENT TESTIMONIALS — Hairline Broadsheet Quotes */}
-            <section className="max-w-7xl mx-auto px-6 py-20 lg:py-24">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-24">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                     Client Voices
                   </p>
-                  <h2 className="mt-2 font-serif text-4xl font-medium text-[#0B0B0D]">
-                    Worn Across Ibadan & Beyond
+                  <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
+                    Worn Across Ibadan &amp; Beyond
                   </h2>
                 </div>
                 <a
@@ -686,11 +838,11 @@ export default function App() {
                 </a>
               </div>
 
-              <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-[#E0D9CA]">
+              <div className="mt-8 sm:mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-[#E0D9CA]">
                 {TESTIMONIALS.map((t, idx) => (
                   <blockquote
                     key={t.name}
-                    className={`flex flex-col justify-between gap-6 ${
+                    className={`flex flex-col justify-between gap-5 pt-6 first:pt-0 md:pt-0 ${
                       idx === 0
                         ? 'md:pr-8'
                         : idx === 1
@@ -719,22 +871,22 @@ export default function App() {
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22 }}
-            className="max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-10"
+            transition={{ duration: 0.2 }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 lg:py-16 space-y-8 sm:space-y-10"
           >
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                   Wealth Fashion Boutique
                 </p>
-                <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-medium text-[#0B0B0D]">
+                <h1 className="mt-2 font-serif text-3xl sm:text-5xl font-medium text-[#0B0B0D]">
                   The Complete Collection
                 </h1>
               </div>
               <button
                 type="button"
                 onClick={() => setStylistOpen(true)}
-                className="px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] inline-flex items-center gap-2 self-start md:self-auto cursor-pointer"
+                className="min-h-[44px] px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] inline-flex items-center gap-2 self-start md:self-auto cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Ask Wealth Stylist</span>
@@ -743,7 +895,7 @@ export default function App() {
 
             {/* Minimalist Editorial Filter Strip */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-[#E0D9CA]">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                 {(['All', 'Clothes', 'Shoes', 'Caps'] as const).map((cat) => {
                   const active = selectedCategory === cat;
                   const count =
@@ -755,7 +907,7 @@ export default function App() {
                       key={cat}
                       type="button"
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-4 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                      className={`min-h-[42px] px-4 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         active
                           ? 'bg-[#0B0B0D] text-[#C6A254]'
                           : 'bg-transparent text-[#57534E] border border-[#DCD5C7] hover:border-[#0B0B0D] hover:text-[#0B0B0D]'
@@ -767,14 +919,14 @@ export default function App() {
                 })}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <select
                   value={selectedGender}
                   onChange={(e) =>
                     setSelectedGender(e.target.value as 'All' | GenderAudience)
                   }
                   aria-label="Filter by collection"
-                  className="min-h-[40px] px-3 py-2 text-xs font-medium bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="min-h-[44px] px-3 py-2 text-base sm:text-xs font-medium bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 >
                   <option value="All">All Collections</option>
                   <option value="Men">Men</option>
@@ -792,7 +944,7 @@ export default function App() {
                     placeholder="Search outfits, shoes, caps..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-h-[40px] pl-9 pr-3 py-2 text-xs bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] pl-9 pr-3 py-2 text-base sm:text-xs bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   />
                 </div>
               </div>
@@ -813,13 +965,13 @@ export default function App() {
                     setSelectedGender('All');
                     setSearchQuery('');
                   }}
-                  className="mt-2 px-6 py-2.5 text-xs uppercase tracking-widest font-semibold bg-[#0B0B0D] text-[#C6A254] cursor-pointer"
+                  className="mt-2 min-h-[44px] px-6 py-2.5 text-xs uppercase tracking-widest font-semibold bg-[#0B0B0D] text-[#C6A254] cursor-pointer"
                 >
                   Reset Filters
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 sm:gap-y-12">
                 {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -839,15 +991,15 @@ export default function App() {
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22 }}
-            className="max-w-7xl mx-auto px-6 py-16 lg:py-24 space-y-20"
+            transition={{ duration: 0.2 }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24 space-y-16 sm:space-y-20"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+              <div className="lg:col-span-6 space-y-5 sm:space-y-6">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                   Our Story · Ibadan, Nigeria
                 </p>
-                <h1 className="font-serif text-4xl sm:text-5xl font-medium text-[#0B0B0D] leading-[1.08] text-balance">
+                <h1 className="font-serif text-3xl sm:text-5xl font-medium text-[#0B0B0D] leading-[1.08] text-balance">
                   Affordable Luxury Fashion for Everyone
                 </h1>
                 <p className="text-base text-[#44403C] leading-relaxed">
@@ -856,18 +1008,18 @@ export default function App() {
                 <p className="text-base text-[#44403C] leading-relaxed">
                   From bespoke black-and-gold Agbada and crisp Senator attire to Italian calfskin footwear and hand-woven velvet Fila caps, every piece in our Bodija showroom is curated for men and women who value quiet power and unmistakable craftsmanship.
                 </p>
-                <div className="pt-2 flex flex-wrap gap-3">
+                <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-3">
                   <button
                     type="button"
                     onClick={() => navigateTo('shop', 'All')}
-                    className="min-h-[44px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] cursor-pointer"
+                    className="min-h-[46px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] cursor-pointer"
                   >
                     Shop the Collection
                   </button>
                   <button
                     type="button"
                     onClick={() => navigateTo('contact')}
-                    className="min-h-[44px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-medium border border-[#0B0B0D] text-[#0B0B0D] hover:bg-white cursor-pointer"
+                    className="min-h-[46px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-medium border border-[#0B0B0D] text-[#0B0B0D] hover:bg-white cursor-pointer"
                   >
                     Book a Fitting
                   </button>
@@ -879,14 +1031,15 @@ export default function App() {
                   <ResilientImage
                     src={ATELIER_IMAGE}
                     alt="Wealth Fashion Boutique luxury showroom in Bodija Ibadan"
+                    priority
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-0 md:divide-x md:divide-[#E0D9CA] pt-14 border-t border-[#E0D9CA]">
-              <div className="md:pr-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-[#E0D9CA] pt-12 border-t border-[#E0D9CA]">
+              <div className="pt-6 first:pt-0 md:pt-0 md:pr-8">
                 <p className="font-serif italic text-xl text-[#9D7B32]">01. Apparel</p>
                 <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
                   Tailored Clothes
@@ -895,7 +1048,7 @@ export default function App() {
                   Sizes S through XL crafted in breathable wool, velvet, cashmere, and silk for weddings, boardrooms, and Ibadan evenings.
                 </p>
               </div>
-              <div className="md:px-8">
+              <div className="pt-6 md:pt-0 md:px-8">
                 <p className="font-serif italic text-xl text-[#9D7B32]">02. Footwear</p>
                 <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
                   Signature Shoes
@@ -904,7 +1057,7 @@ export default function App() {
                   Sizes 40 to 45 spanning double monk-straps, gold-crest loafers, court sneakers, Chelsea boots, and chain-trim heels.
                 </p>
               </div>
-              <div className="md:pl-8">
+              <div className="pt-6 md:pt-0 md:pl-8">
                 <p className="font-serif italic text-xl text-[#9D7B32]">03. Headwear</p>
                 <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
                   Crowning Caps
@@ -918,14 +1071,24 @@ export default function App() {
         )}
 
         {/* CONTACT PAGE */}
-        {page === 'contact' && <ContactSection products={products} />}
+        {page === 'contact' && (
+          <Suspense
+            fallback={
+              <div className="max-w-7xl mx-auto px-6 py-24 text-center text-sm text-[#6B665C]">
+                Loading contact concierge...
+              </div>
+            }
+          >
+            <ContactSection products={products} />
+          </Suspense>
+        )}
       </main>
 
       {/* FOOTER — Public Links Only, Zero Admin Exposure */}
       <footer className="bg-[#0B0B0D] text-[#FAF8F4] border-t border-[#C6A254]/20">
-        <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-12 gap-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-14 grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10">
           <div className="md:col-span-5 space-y-3">
-            <p className="font-serif text-3xl font-medium text-[#FAF8F4]">
+            <p className="font-serif text-2xl sm:text-3xl font-medium text-[#FAF8F4]">
               Wealth Fashion Boutique
             </p>
             <p className="text-sm text-[#FAF8F4]/68 max-w-sm leading-relaxed">
@@ -937,13 +1100,13 @@ export default function App() {
             <p className="text-[11px] uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
               Boutique
             </p>
-            <div className="flex flex-col gap-2 text-[#FAF8F4]/75">
+            <div className="flex flex-col gap-1 text-[#FAF8F4]/75">
               {publicNavItems.map((item) => (
                 <button
                   key={item.target}
                   type="button"
                   onClick={() => navigateTo(item.target)}
-                  className="text-left hover:text-[#C6A254] transition-colors cursor-pointer"
+                  className="min-h-[38px] text-left hover:text-[#C6A254] transition-colors cursor-pointer"
                 >
                   {item.label}
                 </button>
@@ -980,71 +1143,83 @@ export default function App() {
             </p>
           </div>
         </div>
-        <div className="border-t border-white/10 py-5 px-6 text-center text-xs text-[#FAF8F4]/45">
+        <div className="border-t border-white/10 pt-5 pb-20 sm:pb-5 px-6 text-center text-xs text-[#FAF8F4]/45">
           © {new Date().getFullYear()} Wealth Fashion Boutique · Ibadan, Nigeria
         </div>
       </footer>
 
-      {/* ALWAYS-VISIBLE FLOATING ACTION PAIR: WEALTH STYLIST AI + WHATSAPP ORDER */}
-      <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2.5">
-        <button
-          type="button"
-          onClick={() => setStylistOpen(true)}
-          aria-label="Open Wealth Stylist AI Fashion Assistant"
-          className="h-11 px-4 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/50 shadow-2xl hover:bg-[#1C1C22] transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap cursor-pointer"
-        >
-          <Sparkles className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span>Wealth Stylist</span>
-        </button>
+      {/* ALWAYS-VISIBLE FLOATING ACTION PAIR (hidden when a drawer/modal is open on mobile) */}
+      {!anyOverlayOpen && (
+        <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setStylistOpen(true)}
+            aria-label="Open Wealth Stylist AI Fashion Assistant"
+            className="h-11 px-3.5 sm:px-4 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/50 shadow-2xl hover:bg-[#1C1C22] active:scale-[0.98] transition-all inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Wealth Stylist</span>
+          </button>
 
-        <a
-          href={buildWhatsAppUrl(
-            'Hello Wealth Fashion Boutique! I would like to place an order.'
-          )}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Order via WhatsApp"
-          className="h-11 px-4 bg-[#C6A254] text-[#0B0B0D] shadow-2xl hover:bg-[#D4B36A] transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap"
-        >
-          <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span className="hidden sm:inline">WhatsApp Order</span>
-          <span className="sm:hidden">WhatsApp</span>
-        </a>
-      </div>
+          <a
+            href={buildWhatsAppUrl(
+              'Hello Wealth Fashion Boutique! I would like to place an order.'
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Order via WhatsApp"
+            className="h-11 px-3.5 sm:px-4 bg-[#C6A254] text-[#0B0B0D] shadow-2xl hover:bg-[#D4B36A] active:scale-[0.98] transition-all inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap"
+          >
+            <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span className="hidden sm:inline">WhatsApp Order</span>
+            <span className="sm:hidden">WhatsApp</span>
+          </a>
+        </div>
+      )}
 
-      {/* DRAWERS & MODALS */}
-      <CartDrawer
-        isOpen={cartOpen}
-        items={cart}
-        onClose={() => setCartOpen(false)}
-        onUpdateQuantity={handleUpdateCartQuantity}
-        onRemoveItem={handleRemoveCartItem}
-        onClearCart={handleClearCart}
-      />
+      {/* LAZY-LOADED DRAWERS & MODALS */}
+      <Suspense fallback={null}>
+        {cartOpen && (
+          <CartDrawer
+            isOpen={cartOpen}
+            items={cart}
+            onClose={() => setCartOpen(false)}
+            onUpdateQuantity={handleUpdateCartQuantity}
+            onRemoveItem={handleRemoveCartItem}
+            onClearCart={handleClearCart}
+          />
+        )}
 
-      <WealthStylistDrawer
-        isOpen={stylistOpen}
-        onClose={() => setStylistOpen(false)}
-        onAddToCart={handleAddToCart}
-        onOrderNow={(prod, opt) => {
-          setStylistOpen(false);
-          handleOpenOrderNow(prod, opt);
-        }}
-      />
+        {stylistOpen && (
+          <WealthStylistDrawer
+            isOpen={stylistOpen}
+            onClose={() => setStylistOpen(false)}
+            onAddToCart={handleAddToCart}
+            onOrderNow={(prod, opt) => {
+              setStylistOpen(false);
+              handleOpenOrderNow(prod, opt);
+            }}
+          />
+        )}
 
-      <ProductQuickViewModal
-        product={quickViewState.product}
-        initialOption={quickViewState.option}
-        onClose={() => setQuickViewState({ product: null, option: '' })}
-        onAddToCart={handleAddToCart}
-        onOrderNow={handleOpenOrderNow}
-      />
+        {quickViewState.product && (
+          <ProductQuickViewModal
+            product={quickViewState.product}
+            initialOption={quickViewState.option}
+            onClose={() => setQuickViewState({ product: null, option: '' })}
+            onAddToCart={handleAddToCart}
+            onOrderNow={handleOpenOrderNow}
+          />
+        )}
 
-      <OrderModal
-        product={orderModalState.product}
-        initialOption={orderModalState.option}
-        onClose={() => setOrderModalState({ product: null, option: '' })}
-      />
+        {orderModalState.product && (
+          <OrderModal
+            product={orderModalState.product}
+            initialOption={orderModalState.option}
+            onClose={() => setOrderModalState({ product: null, option: '' })}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

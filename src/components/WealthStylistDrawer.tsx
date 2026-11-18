@@ -111,9 +111,9 @@ export function WealthStylistDrawer({
       aria-modal="true"
       aria-label="Wealth Stylist AI Fashion Assistant"
     >
-      <div className="flex h-full w-full max-w-lg flex-col bg-[#FAF8F4] shadow-2xl border-l border-[#E5DFD3]">
+      <div className="flex h-[100dvh] w-full max-w-lg flex-col bg-[#FAF8F4] shadow-2xl border-l border-[#E5DFD3]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/30">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/30">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center bg-[#C6A254] text-[#0B0B0D]">
               <Sparkles className="w-4 h-4" />
@@ -131,21 +131,21 @@ export function WealthStylistDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close Wealth Stylist"
-            className="p-2 text-[#FAF8F4]/70 hover:text-white cursor-pointer"
+            className="h-11 w-11 flex items-center justify-center text-[#FAF8F4]/70 hover:text-white cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Quick Occasion Prompts */}
-        <div className="px-5 py-3 bg-white border-b border-[#EFEAE0] flex items-center gap-2 overflow-x-auto">
+        <div className="px-5 py-3 bg-white border-b border-[#EFEAE0] flex items-center gap-2 overflow-x-auto no-scrollbar">
           {QUICK_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               type="button"
               onClick={() => sendMessage(prompt)}
               disabled={loading}
-              className="px-3 py-1.5 text-xs font-medium bg-[#FAF8F4] border border-[#DCD5C7] text-[#0B0B0D] hover:border-[#C6A254] hover:bg-[#F3EFE6] transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50"
+              className="min-h-[36px] px-3 py-1.5 text-xs font-medium bg-[#FAF8F4] border border-[#DCD5C7] text-[#0B0B0D] hover:border-[#C6A254] hover:bg-[#F3EFE6] transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50"
             >
               {prompt}
             </button>
@@ -211,7 +211,7 @@ export function WealthStylistDrawer({
                           <button
                             type="button"
                             onClick={() => onAddToCart(product, defaultOpt)}
-                            className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#0B0B0D] text-[#FAF8F4] hover:bg-[#232329] inline-flex items-center gap-1 whitespace-nowrap cursor-pointer"
+                            className="min-h-[34px] px-2.5 py-1.5 text-[11px] font-semibold bg-[#0B0B0D] text-[#FAF8F4] hover:bg-[#232329] inline-flex items-center justify-center gap-1 whitespace-nowrap cursor-pointer"
                           >
                             <ShoppingBag className="w-3 h-3" />
                             <span>Add</span>
@@ -219,7 +219,7 @@ export function WealthStylistDrawer({
                           <button
                             type="button"
                             onClick={() => onOrderNow(product, defaultOpt)}
-                            className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#B89242] whitespace-nowrap cursor-pointer"
+                            className="min-h-[34px] px-2.5 py-1.5 text-[11px] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#B89242] whitespace-nowrap cursor-pointer"
                           >
                             Order Now
                           </button>
@@ -262,13 +262,13 @@ export function WealthStylistDrawer({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
-            className="flex-1 min-h-[44px] px-3.5 py-2 text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+            className="flex-1 min-h-[44px] px-3.5 py-2 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
             aria-label="Send message to Wealth Stylist"
-            className="min-h-[44px] px-4 py-2 bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
+            className="min-h-[44px] px-4 py-2 bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5 text-xs font-semibold whitespace-nowrap cursor-pointer"
           >
             <Send className="w-4 h-4" />
             <span>Style Me</span>

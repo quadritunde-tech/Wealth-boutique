@@ -91,7 +91,7 @@ export function ProductCard({
           <span className="text-[11px] uppercase tracking-wider text-[#78716C] shrink-0">
             {product.optionLabel}
           </span>
-          <div className="flex flex-wrap justify-end gap-1">
+          <div className="flex flex-wrap justify-end gap-1.5">
             {product.options.map((opt) => {
               const active = selectedOption === opt;
               return (
@@ -99,7 +99,7 @@ export function ProductCard({
                   key={opt}
                   type="button"
                   onClick={() => setSelectedOption(opt)}
-                  className={`min-h-[28px] px-2 py-0.5 text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 ${
+                  className={`min-h-[36px] sm:min-h-[30px] px-2.5 py-1 text-xs sm:text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 ${
                     active
                       ? 'text-[#0B0B0D] border-[#C6A254] font-semibold'
                       : 'text-[#78716C] border-transparent hover:text-[#0B0B0D]'
@@ -113,18 +113,18 @@ export function ProductCard({
         </div>
 
         {/* Action Pair */}
-        <div className="mt-3.5 grid grid-cols-2 gap-2">
+        <div className="mt-3.5 grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() => onOrderNow(product, selectedOption)}
-            className="min-h-[40px] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest bg-[#C6A254] text-[#0B0B0D] hover:bg-[#B89242] transition-colors whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B0B0D]"
+            className="min-h-[44px] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest bg-[#C6A254] text-[#0B0B0D] hover:bg-[#B89242] active:scale-[0.98] transition-all whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B0B0D]"
           >
             Order Now
           </button>
           <button
             type="button"
             onClick={handleAdd}
-            className="min-h-[40px] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest bg-[#0B0B0D] text-[#FAF8F4] hover:bg-[#232329] transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C6A254]"
+            className="min-h-[44px] px-3 py-2 text-[11px] font-semibold uppercase tracking-widest bg-[#0B0B0D] text-[#FAF8F4] hover:bg-[#232329] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C6A254]"
           >
             <ShoppingBag className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{justAdded ? 'Added' : 'Add to Cart'}</span>

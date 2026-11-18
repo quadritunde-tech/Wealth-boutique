@@ -118,7 +118,7 @@ export function OrderModal({
       aria-modal="true"
       aria-labelledby="order-modal-title"
     >
-      <div className="relative w-full max-w-lg bg-white border border-[#E5DFD3] shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white border border-[#E5DFD3] shadow-2xl max-h-[92dvh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EFEAE0] bg-[#0B0B0D] text-[#FAF8F4]">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-[#C6A254]">
@@ -132,7 +132,7 @@ export function OrderModal({
             type="button"
             onClick={onClose}
             aria-label="Close order modal"
-            className="p-2 text-[#FAF8F4]/70 hover:text-white cursor-pointer"
+            className="h-11 w-11 flex items-center justify-center text-[#FAF8F4]/70 hover:text-white cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -205,7 +205,7 @@ export function OrderModal({
                   <select
                     value={selectedOption}
                     onChange={(e) => setSelectedOption(e.target.value)}
-                    className="w-full min-h-[42px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   >
                     {product.options.map((opt) => (
                       <option key={opt} value={opt}>
@@ -224,7 +224,7 @@ export function OrderModal({
                     max={25}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                    className="w-full min-h-[42px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] tabular-nums focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] tabular-nums focus:border-[#0B0B0D] focus:outline-none"
                   />
                 </div>
               </div>
@@ -239,7 +239,7 @@ export function OrderModal({
                   placeholder="e.g. Chinedu Okafor"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full min-h-[42px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 />
               </div>
 
@@ -253,7 +253,7 @@ export function OrderModal({
                   placeholder="e.g. +234 803 000 0000"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full min-h-[42px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 />
               </div>
 
@@ -266,7 +266,7 @@ export function OrderModal({
                   placeholder="e.g. Bodija, Jericho, Oluyole Estate, or Lagos"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="w-full min-h-[42px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 />
               </div>
 
@@ -279,7 +279,7 @@ export function OrderModal({
                   placeholder="Any preferred delivery time or custom tailoring request..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="w-full px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 />
               </div>
 

@@ -119,9 +119,9 @@ export function CartDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/65 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Shopping Bag">
-      <div className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl border-l border-[#E5DFD3]">
+      <div className="flex h-[100dvh] w-full max-w-md flex-col bg-white shadow-2xl border-l border-[#E5DFD3]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#0B0B0D] text-[#FAF8F4]">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 bg-[#0B0B0D] text-[#FAF8F4]">
           <div className="flex items-center gap-2.5">
             <ShoppingBag className="w-4 h-4 text-[#C6A254]" aria-hidden="true" />
             <h2 className="font-serif text-lg font-semibold">
@@ -132,7 +132,7 @@ export function CartDrawer({
             type="button"
             onClick={resetAndClose}
             aria-label="Close shopping bag"
-            className="p-2 text-[#FAF8F4]/70 hover:text-white cursor-pointer"
+            className="h-11 w-11 flex items-center justify-center text-[#FAF8F4]/70 hover:text-white cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -276,7 +276,7 @@ export function CartDrawer({
                 placeholder="Your Full Name *"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full min-h-[40px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
               />
               <input
                 type="tel"
@@ -284,14 +284,14 @@ export function CartDrawer({
                 placeholder="WhatsApp Phone Number (e.g. +234 803...) *"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full min-h-[40px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
               />
               <input
                 type="text"
                 placeholder="Delivery Address (Ibadan / Nationwide)"
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
-                className="w-full min-h-[40px] px-3 py-2 text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                className="w-full min-h-[44px] px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
               />
             </div>
 
