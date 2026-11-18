@@ -61,7 +61,7 @@ export function ProductCard({
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           <span className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-medium text-[#FAF8F4] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-            <span>View Piece</span>
+            <span>View Item</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#C6A254]" aria-hidden="true" />
           </span>
         </a>
@@ -77,7 +77,7 @@ export function ProductCard({
           </div>
           {product.isBestSeller && (
             <span className="text-[#9D7B32] font-semibold whitespace-nowrap shrink-0">
-              House Signature
+              Best Seller
             </span>
           )}
         </div>

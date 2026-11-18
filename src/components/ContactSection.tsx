@@ -90,17 +90,17 @@ export function ContactSection({ products }: ContactSectionProps) {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-16 lg:pt-10 lg:pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        {/* Left: Atelier Details */}
+        {/* Left: Shop Details */}
         <div className="lg:col-span-5 space-y-8">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-              Ibadan Concierge
+              Get In Touch
             </p>
             <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-medium text-[#0B0B0D] leading-[1.08]">
-              Visit or Message Our Ibadan Atelier
+              Visit or Message Our Ibadan Shop
             </h1>
             <p className="mt-4 text-base text-[#57534E] leading-relaxed">
-              Need custom measurements for an Agbada, size guidance on our Italian calfskin footwear, or same-day delivery within Ibadan? Reach our stylists directly.
+              Need help choosing your size, want custom measurements for Agbada or Senator, or need same-day delivery in Ibadan? Send us a message or chat with us on WhatsApp.
             </p>
           </div>
 
@@ -109,7 +109,7 @@ export function ContactSection({ products }: ContactSectionProps) {
               <MapPin className="w-5 h-5 text-[#9D7B32] shrink-0 mt-0.5" />
               <div>
                 <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D]">
-                  Boutique Address
+                  Shop Address
                 </p>
                 <p className="mt-1 text-sm text-[#57534E]">
                   {BUSINESS_INFO.location}
@@ -124,10 +124,10 @@ export function ContactSection({ products }: ContactSectionProps) {
               <Phone className="w-5 h-5 text-[#9D7B32] shrink-0 mt-0.5" />
               <div>
                 <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D]">
-                  WhatsApp Concierge
+                  WhatsApp Number
                 </p>
                 <a
-                  href={buildWhatsAppUrl('Hello Wealth Fashion Boutique, I have a styling or order enquiry.')}
+                  href={buildWhatsAppUrl('Hello Wealth Fashion Boutique, I have a question about an item.')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-block font-mono text-sm text-[#0B0B0D] hover:text-[#9D7B32] underline underline-offset-4"
@@ -141,7 +141,7 @@ export function ContactSection({ products }: ContactSectionProps) {
               <Instagram className="w-5 h-5 text-[#9D7B32] shrink-0 mt-0.5" />
               <div>
                 <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D]">
-                  Instagram Lookbook
+                  Instagram
                 </p>
                 <a
                   href={BUSINESS_INFO.instagramUrl}
@@ -159,10 +159,10 @@ export function ContactSection({ products }: ContactSectionProps) {
         {/* Right: Customer Enquiry Form */}
         <div className="lg:col-span-7 bg-white border border-[#E0D9CA] p-7 sm:p-10">
           <h2 className="font-serif text-3xl font-medium text-[#0B0B0D]">
-            Send a Styling or Order Enquiry
+            Send Us a Message
           </h2>
           <p className="mt-2 text-sm text-[#57534E]">
-            Your enquiry is logged immediately for our Ibadan showroom team and receives a personal WhatsApp reply.
+            Fill this form and our Ibadan team will reply you on WhatsApp very quickly.
           </p>
 
           {successMsg ? (
@@ -190,7 +190,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                   onClick={() => setSuccessMsg('')}
                   className="px-5 py-2.5 text-xs font-medium border border-[#DCD5C7] text-[#0B0B0D] hover:bg-white cursor-pointer"
                 >
-                  Send Another Enquiry
+                  Send Another Message
                 </button>
               </div>
             </div>
@@ -228,7 +228,7 @@ export function ContactSection({ products }: ContactSectionProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-[#44403C] mb-1.5">
-                    Product of Interest
+                    Item You Want
                   </label>
                   <select
                     value={productName}
@@ -242,7 +242,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                     }}
                     className="w-full min-h-[44px] px-3.5 py-2 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   >
-                    <option value="General Boutique Enquiry">General Boutique Enquiry</option>
+                    <option value="General Question">General Question</option>
                     {products.map((p) => (
                       <option key={p.id} value={p.name}>
                         {p.name} ({p.category})
@@ -253,7 +253,7 @@ export function ContactSection({ products }: ContactSectionProps) {
 
                 <div>
                   <label className="block text-xs font-medium text-[#44403C] mb-1.5">
-                    Preferred Size / Colour
+                    Size / Colour
                   </label>
                   <select
                     value={selectedOption}
@@ -271,11 +271,11 @@ export function ContactSection({ products }: ContactSectionProps) {
 
               <div>
                 <label className="block text-xs font-medium text-[#44403C] mb-1.5">
-                  Message or Custom Tailoring Request
+                  Your Message
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="Share your preferred delivery location, event date, or fit notes..."
+                  placeholder="Tell us your delivery location, event date, or any question you have..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-base sm:text-sm bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
@@ -293,7 +293,7 @@ export function ContactSection({ products }: ContactSectionProps) {
                 disabled={submitting}
                 className="w-full sm:w-auto min-h-[46px] px-8 py-3 text-sm font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] disabled:opacity-60 transition-colors cursor-pointer"
               >
-                {submitting ? 'Submitting Enquiry...' : 'Submit Enquiry'}
+                {submitting ? 'Sending Message...' : 'Send Message'}
               </button>
             </form>
           )}

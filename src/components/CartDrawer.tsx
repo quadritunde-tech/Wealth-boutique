@@ -153,7 +153,7 @@ export function CartDrawer({
                   {checkoutDone.message}
                 </h3>
                 <p className="text-sm text-[#57534E]">
-                  All items in your bag have been saved. Tap below to send your complete order directly to our Ibadan concierge on WhatsApp.
+                  All items in your bag are saved. Tap below to send your full order list to our Ibadan shop on WhatsApp.
                 </p>
               </div>
 
@@ -169,14 +169,14 @@ export function CartDrawer({
                   className="inline-flex items-center justify-center gap-2 w-full min-h-[46px] px-5 py-3 text-sm font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span>Send All Items via WhatsApp</span>
+                  <span>Send All Items on WhatsApp</span>
                 </a>
                 <button
                   type="button"
                   onClick={resetAndClose}
                   className="w-full min-h-[42px] px-4 py-2 text-xs font-medium border border-[#DCD5C7] text-[#0B0B0D] hover:bg-[#FAF8F4] cursor-pointer"
                 >
-                  Return to Boutique
+                  Back to Shop
                 </button>
               </div>
             </div>
@@ -185,14 +185,14 @@ export function CartDrawer({
               <ShoppingBag className="w-10 h-10 text-[#C6A254] mb-3 opacity-75" />
               <p className="font-serif text-xl text-[#0B0B0D]">Your bag is empty</p>
               <p className="mt-1.5 text-sm text-[#57534E] max-w-xs">
-                Explore our bespoke Agbada, tailored blazers, handcrafted shoes, and luxury caps.
+                Check out our Agbada, Senator suits, leather shoes, and clean caps to add items here.
               </p>
               <button
                 type="button"
                 onClick={resetAndClose}
                 className="mt-6 px-6 py-2.5 text-xs font-semibold bg-[#0B0B0D] text-[#FAF8F4] hover:bg-[#232329] cursor-pointer"
               >
-                Explore Shop
+                Start Shopping
               </button>
             </div>
           ) : (

@@ -57,9 +57,9 @@ function ensureStore(): StoreData {
             },
             {
               productId: 'wfb-cap-02',
-              name: 'Royal Velvet & Gold Fila',
+              name: 'Royal Velvet & Gold Fila Cap',
               price: 45000,
-              selectedOption: 'Black/Gold',
+              selectedOption: 'Black & Gold',
               quantity: 1,
             },
           ],
@@ -74,9 +74,9 @@ function ensureStore(): StoreData {
           id: 'enq-seed-1',
           customerName: 'Folake Adeyemi',
           customerPhone: '+2348091127744',
-          productName: 'Champagne & Noir Silk Kaftan',
+          productName: 'Gold & Black Silk Kaftan Gown',
           selectedOption: 'M',
-          message: 'Good afternoon! Is this available for express delivery to Jericho, Ibadan tomorrow?',
+          message: 'Good afternoon! Is this available for fast delivery to Jericho, Ibadan tomorrow?',
           status: 'New Enquiry',
           source: 'Contact Form',
           createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
@@ -282,7 +282,7 @@ ${allRoutes
         ? ['S', 'M', 'L', 'XL']
         : category === 'Shoes'
           ? ['40', '41', '42', '43', '44', '45']
-          : ['Obsidian Black', 'Alabaster White', 'Black/Gold'];
+          : ['Black', 'White', 'Black & Gold'];
 
     const newProduct: Product = {
       id: `wfb-${category.toLowerCase()}-${Date.now()}`,
@@ -561,15 +561,15 @@ ${allRoutes
           .join('\n')
       : '';
 
-    const systemInstruction = `You are "Wealth Stylist", the signature AI Fashion Assistant for Wealth Fashion Boutique in Ibadan, Nigeria (Instagram: @mr_wealth2022, WhatsApp: +234 904 755 2985).
-Your persona: Warm, confident, sharp, trendy Nigerian luxury fashion stylist based in Bodija, Ibadan. Use natural Nigerian luxury phrasing lightly and authentically (like "clean look", "Owanbe-ready", "Ibadan evening elegance", "sharp finish", "step out looking like money")—never overly slangy or robotic, always polished and helpful.
+    const systemInstruction = `You are "Wealth Stylist", the friendly fashion assistant for Wealth Fashion Boutique in Bodija, Ibadan, Nigeria (Instagram: @mr_wealth2022, WhatsApp: +234 904 755 2985).
+Your tone: Warm, friendly, trendy Nigerian stylist who speaks in very simple, clear, everyday English that any Nigerian shopper understands easily (you can add light, respectful Nigerian warmth like "clean look", "Owambe-ready", "sharp fit", "step out in style"—avoid big grammar, French words, or overly fancy fashion jargon).
 Your job:
-1. Understand the client's occasion, budget in Naira (₦), gender/vibe, or pairing request (e.g., matching shoes to a shirt, choosing the right cap/fila, party outfit, corporate look).
-2. Always suggest EXACTLY 3 real products from our live boutique catalog below that best fit their request and budget.
-3. Keep your reply concise (2 to 4 crisp sentences) explaining why those 3 pieces work together or suit the occasion, plus a brief 1-line styling tip.
-4. Only return product IDs that exist verbatim in the live catalog below.
+1. Understand the customer's event, budget in Naira (₦), gender/style, or what they want to match (for example: shoes to match a shirt, which cap fits best, party outfit, church/office wear).
+2. Always suggest EXACTLY 3 real items from our shop list below that fit their request and budget.
+3. Keep your reply short and clear (2 to 4 simple sentences) explaining why those 3 items match well together, plus 1 short styling tip.
+4. Only return product IDs that exist verbatim in the live shop list below.
 
-LIVE WEALTH FASHION BOUTIQUE CATALOG:
+LIVE WEALTH FASHION BOUTIQUE ITEMS:
 ${catalogContext}`;
 
     const userPrompt = recentHistory
@@ -633,10 +633,10 @@ ${catalogContext}`;
       res.json({
         reply:
           parsed.reply ||
-          'Welcome to Wealth Fashion Boutique! Here are three curated pieces from our Ibadan atelier tailored to elevate your look.',
+          'Welcome to Wealth Fashion Boutique! Here are three great items from our Ibadan shop that will give you a clean, rich look.',
         stylingNote:
           parsed.stylingNote ||
-          'Pair structured black tailoring with brushed gold accents for effortless Ibadan evening poise.',
+          'Match dark black outfits with gold details on your shoes or cap for a clean finish.',
         recommendedProducts: matchedProducts,
       });
     } catch (err: unknown) {

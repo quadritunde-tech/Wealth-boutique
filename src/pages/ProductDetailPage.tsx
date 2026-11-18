@@ -52,13 +52,13 @@ export function ProductDetailPage({
     return (
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-24 text-center space-y-5">
         <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-          Piece Unavailable
+          Item Not Found
         </p>
         <h1 className="font-serif text-4xl font-medium text-[#0B0B0D]">
-          We couldn’t find that boutique piece
+          Sorry, we couldn’t find this item
         </h1>
         <p className="text-sm text-[#57534E]">
-          It may have sold out or been archived. Explore our live Ibadan collection below.
+          It may be out of stock or removed. Check out our available clothes, shoes, and caps below.
         </p>
         <a
           href="/shop"
@@ -125,7 +125,7 @@ export function ProductDetailPage({
                 {product.category} · {product.gender}
               </span>
               {product.isBestSeller && (
-                <span className="text-[#9D7B32] font-semibold">House Signature</span>
+                <span className="text-[#9D7B32] font-semibold">Best Seller</span>
               )}
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D] leading-tight">
@@ -176,7 +176,7 @@ export function ProductDetailPage({
               onClick={() => onOrderNow(product, selectedOption)}
               className="w-full min-h-[48px] px-6 py-3 text-xs uppercase tracking-[0.18em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] active:scale-[0.99] transition-all cursor-pointer"
             >
-              Order Now · Direct Ibadan Concierge
+              Order Now
             </button>
 
             <button
@@ -191,7 +191,7 @@ export function ProductDetailPage({
               {addedFeedback ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-[#C6A254]" />
-                  <span>Added to Shopping Bag</span>
+                  <span>Added to Bag</span>
                 </>
               ) : (
                 <>
@@ -203,41 +203,41 @@ export function ProductDetailPage({
 
             <a
               href={buildWhatsAppUrl(
-                `Hello Wealth Fashion Boutique! I'd like to ask about ${product.name} (${product.optionLabel}: ${selectedOption}) priced at ${formatNaira(product.price)}.`
+                `Hello Wealth Fashion Boutique! I want to ask about ${product.name} (${product.optionLabel}: ${selectedOption}) priced at ${formatNaira(product.price)}.`
               )}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full min-h-[44px] px-6 py-2.5 text-xs font-medium border border-[#DCD5C7] text-[#0B0B0D] hover:border-[#0B0B0D] transition-colors flex items-center justify-center gap-2"
             >
               <MessageCircle className="w-4 h-4 text-[#9D7B32]" />
-              <span>Ask Fitting Question on WhatsApp</span>
+              <span>Ask About Size or Price on WhatsApp</span>
             </a>
           </div>
 
-          {/* Atelier Assurances */}
+          {/* Delivery & Quality Guarantees */}
           <div className="pt-5 border-t border-[#E0D9CA] space-y-3 text-xs text-[#57534E]">
             <div className="flex items-center gap-2.5">
               <Truck className="w-4 h-4 text-[#9D7B32] shrink-0" />
-              <span>Same-day courier in Bodija, Jericho, Oluyole &amp; Akobo, Ibadan.</span>
+              <span>Same-day delivery in Bodija, Jericho, Oluyole &amp; Akobo, Ibadan.</span>
             </div>
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="w-4 h-4 text-[#9D7B32] shrink-0" />
-              <span>Quality checked at our Ibadan atelier prior to dispatch.</span>
+              <span>Checked carefully at our Ibadan shop before we send it out.</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Complete The Look — Cross-Category Recommendations */}
+      {/* Cross-Category Recommendations */}
       {relatedPieces.length > 0 && (
         <div className="pt-12 border-t border-[#E0D9CA] space-y-8">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-                Pair With This Piece
+                Goes Well With This
               </p>
               <h2 className="mt-1 font-serif text-3xl font-medium text-[#0B0B0D]">
-                Complete the Look
+                You May Also Like
               </h2>
             </div>
             <a
@@ -245,7 +245,7 @@ export function ProductDetailPage({
               onClick={(e) => handleLink(e, '/shop')}
               className="text-xs uppercase tracking-[0.16em] font-semibold text-[#0B0B0D] hover:text-[#9D7B32]"
             >
-              View All
+              See All
             </a>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">

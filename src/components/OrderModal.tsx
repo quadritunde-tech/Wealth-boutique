@@ -122,7 +122,7 @@ export function OrderModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#EFEAE0] bg-[#0B0B0D] text-[#FAF8F4]">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-[#C6A254]">
-              Direct Boutique Order
+              Quick Order
             </p>
             <h2 id="order-modal-title" className="font-serif text-xl font-semibold">
               {product.name}
@@ -152,7 +152,7 @@ export function OrderModal({
                   {confirmation.text}
                 </h3>
                 <p className="text-sm text-[#57534E]">
-                  Your request has been logged with our Bodija atelier. Tap below to send your order details directly on WhatsApp for priority dispatch.
+                  Your order is saved at our Ibadan shop. Tap below to send your order details on WhatsApp so we can pack and deliver it fast.
                 </p>
               </div>
               <div className="pt-3 flex flex-col sm:flex-row gap-3 justify-center">
@@ -259,7 +259,7 @@ export function OrderModal({
 
               <div>
                 <label className="block text-xs font-medium text-[#44403C] mb-1.5">
-                  Delivery Location (Ibadan / Nationwide)
+                  Delivery Address (Ibadan / Nationwide)
                 </label>
                 <input
                   type="text"
@@ -272,11 +272,11 @@ export function OrderModal({
 
               <div>
                 <label className="block text-xs font-medium text-[#44403C] mb-1.5">
-                  Styling Note or Fit Request (Optional)
+                  Extra Note (Optional)
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Any preferred delivery time or custom tailoring request..."
+                  placeholder="e.g. Deliver before 4 PM, or any size note..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="w-full px-3 py-2 text-base sm:text-sm bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"

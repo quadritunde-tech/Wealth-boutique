@@ -55,7 +55,7 @@ const WealthStylistDrawer = lazy(() =>
 );
 
 const CART_STORAGE_KEY = 'wfb_shopping_cart_v1';
-const PRODUCTS_CACHE_KEY = 'wfb_products_cache_v2';
+const PRODUCTS_CACHE_KEY = 'wfb_products_cache_v3';
 
 interface AppRoute {
   page: PageView;
@@ -174,20 +174,20 @@ export default function App() {
 
   // Sync dynamic per-page & per-product SEO tags, OpenGraph, Twitter & Canonical URL
   useEffect(() => {
-    let title = 'Wealth Fashion Boutique – Luxury Ibadan Clothing, Shoes & Caps';
+    let title = 'Wealth Fashion Boutique – Quality Clothes, Shoes & Caps in Ibadan';
     let description =
-      'Shop affordable luxury clothes, Italian calfskin shoes, and signature caps for men and women in Bodija, Ibadan. Order online or via WhatsApp.';
+      'Shop affordable luxury clothes, leather shoes, and clean caps for men and women in Bodija, Ibadan. Order online or on WhatsApp.';
     let robots = 'index, follow';
     let ogImage = window.location.origin + HERO_IMAGE;
 
     if (route.page === 'shop') {
       if (route.category === 'All') {
-        title = 'Shop Luxury Clothes, Shoes & Caps – Wealth Fashion Boutique';
+        title = 'Shop Clothes, Shoes & Caps – Wealth Fashion Boutique Ibadan';
         description =
-          'Browse bespoke Agbada, Senator suits, velvet blazers, calfskin shoes, and velvet Fila caps in Naira. Same-day delivery across Ibadan and nationwide.';
+          'Browse Agbada, Senator suits, dinner blazers, leather shoes, and Fila caps in Naira. Same-day delivery in Ibadan and fast delivery across Nigeria.';
       } else {
         title = `Shop ${route.category} – Wealth Fashion Boutique Ibadan`;
-        description = `Explore our curated ${route.category} collection in Naira at Wealth Fashion Boutique, Bodija, Ibadan. Order online or via WhatsApp concierge.`;
+        description = `Shop our quality ${route.category} collection in Naira at Wealth Fashion Boutique, Bodija, Ibadan. Order online or on WhatsApp.`;
       }
     } else if (route.page === 'product') {
       if (activeProduct) {
@@ -197,17 +197,17 @@ export default function App() {
           ? activeProduct.image
           : window.location.origin + activeProduct.image;
       } else {
-        title = 'Piece Unavailable – Wealth Fashion Boutique';
-        description = 'Browse our live Ibadan collection of clothes, shoes, and caps.';
+        title = 'Item Not Found – Wealth Fashion Boutique';
+        description = 'Browse our available clothes, shoes, and caps in Ibadan.';
       }
     } else if (route.page === 'about') {
-      title = 'Our Story – Wealth Fashion Boutique Ibadan Atelier';
+      title = 'About Us – Wealth Fashion Boutique Ibadan';
       description =
-        'Discover Wealth Fashion Boutique in Bodija, Ibadan: affordable luxury menswear, womenswear, handcrafted footwear, and signature headwear.';
+        'Learn about Wealth Fashion Boutique in Bodija, Ibadan: affordable luxury clothes, shoes, and caps for men and women.';
     } else if (route.page === 'contact') {
       title = 'Contact & Visit Us in Ibadan – Wealth Fashion Boutique';
       description =
-        'Visit Plot 14 Awolowo Avenue, Bodija, Ibadan or message our WhatsApp concierge (+234 904 755 2985) for bespoke fittings and express orders.';
+        'Visit Plot 14 Awolowo Avenue, Bodija, Ibadan or message us on WhatsApp (+234 904 755 2985) to place an order or ask about sizes.';
     } else if (route.page === 'admin') {
       title = 'Owner Portal – Wealth Fashion Boutique';
       description = 'Private owner management dashboard for Wealth Fashion Boutique.';
@@ -421,7 +421,7 @@ export default function App() {
       {
         index: '01',
         title: 'Clothes' as ProductCategory,
-        subtitle: 'Agbada, Senator suits, velvet blazers & silk kaftans',
+        subtitle: 'Agbada, Senator suits, blazers, kaftans & two-piece sets',
         count: products.filter((p) => p.category === 'Clothes').length,
         image: findRep(
           'Clothes',
@@ -431,7 +431,7 @@ export default function App() {
       {
         index: '02',
         title: 'Shoes' as ProductCategory,
-        subtitle: 'Italian calfskin monk-straps, suede loafers & heels',
+        subtitle: 'Leather dress shoes, suede loafers, sneakers & heels',
         count: products.filter((p) => p.category === 'Shoes').length,
         image: findRep(
           'Shoes',
@@ -441,7 +441,7 @@ export default function App() {
       {
         index: '03',
         title: 'Caps' as ProductCategory,
-        subtitle: 'Hand-woven gold Fila, bullion wool caps & fedoras',
+        subtitle: 'Velvet Fila caps, wool face caps, snapbacks & fedoras',
         count: products.filter((p) => p.category === 'Caps').length,
         image: findRep(
           'Caps',
@@ -683,7 +683,7 @@ export default function App() {
               Wealth Fashion Boutique
             </p>
             <p className="text-sm text-[#FAF8F4]/68 max-w-sm leading-relaxed">
-              Look Rich, Feel Confident. Ibadan destination for luxury clothes, handcrafted footwear, and signature caps for men and women.
+              Look Rich, Feel Confident. Your Ibadan shop for quality clothes, leather shoes, and clean caps for men and women.
             </p>
           </div>
 
@@ -707,7 +707,7 @@ export default function App() {
 
           <div className="md:col-span-2 space-y-3 text-sm">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
-              Houses
+              Categories
             </p>
             <div className="flex flex-col gap-1 text-[#FAF8F4]/75">
               <a

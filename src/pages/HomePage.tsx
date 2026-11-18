@@ -39,7 +39,7 @@ export function HomePage({
 
   return (
     <>
-      {/* HERO SECTION — Editorial Asymmetric Runway Showcase */}
+      {/* HERO SECTION */}
       <section className="relative bg-[#0B0B0D] text-[#FAF8F4] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 lg:py-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[460px] lg:min-h-[620px]">
@@ -50,7 +50,7 @@ export function HomePage({
               className="lg:col-span-5 flex flex-col justify-center py-6 sm:py-8 lg:py-20 lg:pr-10 z-10 order-2 lg:order-1"
             >
               <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
-                Ibadan Flagship Atelier · Men &amp; Women
+                Bodija, Ibadan · Men &amp; Women
               </p>
               <h1 className="mt-3 sm:mt-4 font-serif text-[clamp(2.35rem,6vw,4.75rem)] font-medium leading-[1.04] tracking-tight text-balance">
                 Look Rich,{' '}
@@ -59,7 +59,7 @@ export function HomePage({
                 </span>
               </h1>
               <p className="mt-4 sm:mt-6 text-sm sm:text-[15px] text-[#FAF8F4]/75 leading-relaxed max-w-md">
-                Bespoke black-and-gold Agbada, Italian calfskin footwear, and signature velvet headwear—curated in Bodija, Ibadan for effortless presence.
+                Quality black-and-gold Agbada, Senator suits, Italian leather shoes, and clean caps for men and women—ready in Bodija, Ibadan or delivered anywhere in Nigeria.
               </p>
 
               <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
@@ -68,7 +68,7 @@ export function HomePage({
                   onClick={(e) => handleAnchor(e, '/shop')}
                   className="min-h-[46px] px-7 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2.5 whitespace-nowrap"
                 >
-                  <span>Explore Collection</span>
+                  <span>Shop Now</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </a>
                 <button
@@ -77,7 +77,7 @@ export function HomePage({
                   className="min-h-[46px] px-5 py-3 text-[11px] uppercase tracking-[0.16em] font-medium text-[#FAF8F4]/90 border border-[#C6A254]/35 sm:border-0 sm:border-b sm:border-[#C6A254]/50 hover:text-[#C6A254] hover:border-[#C6A254] transition-colors inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#C6A254]" />
-                  <span>Consult Wealth Stylist</span>
+                  <span>Ask Wealth Stylist</span>
                 </button>
               </div>
             </motion.div>
@@ -85,7 +85,7 @@ export function HomePage({
             <div className="lg:col-span-7 relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[620px] order-1 lg:order-2">
               <ResilientImage
                 src={HERO_IMAGE}
-                alt="Wealth Fashion Boutique Ibadan luxury black and gold couture couple"
+                alt="Wealth Fashion Boutique Ibadan black and gold luxury outfits"
                 priority
                 width={1280}
                 height={720}
@@ -99,36 +99,36 @@ export function HomePage({
           </div>
         </div>
 
-        {/* Full-width 4-Column Atelier Strip below Hero */}
+        {/* 4-Column Store Highlights Strip */}
         <div className="border-t border-white/10 bg-[#101014]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:divide-x lg:divide-white/10">
             <div className="lg:pr-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                Ibadan Flagship
+                Visit Our Shop
               </p>
               <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                Awolowo Avenue, Bodija
+                Awolowo Avenue, Bodija, Ibadan
               </p>
             </div>
             <div className="lg:px-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                Three Houses
+                What We Sell
               </p>
               <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                Clothes, Shoes &amp; Headwear
+                Clothes, Shoes &amp; Caps
               </p>
             </div>
             <div className="lg:px-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                Express Courier
+                Fast Delivery
               </p>
               <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                Same-Day Ibadan &amp; Nationwide
+                Same-Day in Ibadan &amp; Nationwide
               </p>
             </div>
             <div className="lg:pl-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                Direct Concierge
+                Order on WhatsApp
               </p>
               <p className="mt-1 text-xs text-[#FAF8F4]/75 font-mono">
                 {BUSINESS_INFO.whatsappDisplay}
@@ -138,15 +138,15 @@ export function HomePage({
         </div>
       </section>
 
-      {/* EDITORIAL CATEGORY LOOKBOOK — Asymmetric Mosaic */}
+      {/* SHOP BY CATEGORY */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-24">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-              The Boutique Houses
+              Shop By Category
             </p>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
-              Curated By Discipline
+              Clothes, Shoes &amp; Caps
             </h2>
           </div>
           <a
@@ -154,13 +154,13 @@ export function HomePage({
             onClick={(e) => handleAnchor(e, '/shop')}
             className="min-h-[40px] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B0B0D] hover:text-[#9D7B32] inline-flex items-center gap-2 self-start sm:self-auto"
           >
-            <span>Explore All {products.length} Pieces</span>
+            <span>See All {products.length} Items</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
         </div>
 
         <div className="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
-          {/* Primary House: Clothes */}
+          {/* Clothes */}
           <a
             href={`/shop/${categoryPreviews[0].title.toLowerCase()}`}
             onClick={(e) =>
@@ -177,7 +177,7 @@ export function HomePage({
             <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 flex items-end justify-between gap-4 text-[#FAF8F4]">
               <div>
                 <p className="font-serif italic text-sm text-[#C6A254]">
-                  {categoryPreviews[0].index} · {categoryPreviews[0].count} Pieces
+                  {categoryPreviews[0].index} · {categoryPreviews[0].count} Items
                 </p>
                 <h3 className="mt-1 font-serif text-2xl sm:text-3xl font-medium">
                   {categoryPreviews[0].title}
@@ -190,7 +190,7 @@ export function HomePage({
             </div>
           </a>
 
-          {/* Secondary Houses: Shoes & Caps */}
+          {/* Shoes & Caps */}
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-5 sm:gap-6">
             {categoryPreviews.slice(1).map((cat) => {
               const catPath = `/shop/${cat.title.toLowerCase()}`;
@@ -210,7 +210,7 @@ export function HomePage({
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-4 text-[#FAF8F4]">
                     <div>
                       <p className="font-serif italic text-sm text-[#C6A254]">
-                        {cat.index} · {cat.count} Pieces
+                        {cat.index} · {cat.count} Items
                       </p>
                       <h3 className="mt-0.5 font-serif text-2xl font-medium">
                         {cat.title}
@@ -228,15 +228,15 @@ export function HomePage({
         </div>
       </section>
 
-      {/* BEST SELLERS — Clean Gallery Grid */}
+      {/* BEST SELLERS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-20 lg:pb-24">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-              Most Requested
+              Customer Favourites
             </p>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
-              House Best Sellers
+              Best Sellers
             </h2>
           </div>
           <a
@@ -244,7 +244,7 @@ export function HomePage({
             onClick={(e) => handleAnchor(e, '/shop')}
             className="min-h-[44px] inline-flex items-center px-6 py-2.5 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors self-start sm:self-auto whitespace-nowrap"
           >
-            View Full Catalogue
+            See All Products
           </a>
         </div>
 
@@ -261,21 +261,21 @@ export function HomePage({
         </div>
       </section>
 
-      {/* WHY SHOP WITH US — Obsidian Editorial Manifesto */}
+      {/* WHY SHOP WITH US */}
       <section className="bg-[#0B0B0D] text-[#FAF8F4] py-16 sm:py-20 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
           <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-28">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
-              The Wealth Standard
+              Why Shop With Us
             </p>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium leading-[1.08] text-balance">
-              Tailored for Presence,{' '}
+              Rich Look,{' '}
               <span className="italic text-[#D8B973] font-normal">
-                Priced with Integrity
+                Fair Price
               </span>
             </h2>
             <p className="text-sm text-[#FAF8F4]/70 leading-relaxed max-w-md">
-              Every silhouette in our Bodija showroom balances rich Nigerian sartorial heritage with understated contemporary finish.
+              Everything in our Bodija, Ibadan shop is made to look classy, fit properly, and last long without costing too much.
             </p>
           </div>
 
@@ -283,23 +283,23 @@ export function HomePage({
             {[
               {
                 num: '01',
-                title: 'Bespoke Ibadan Tailoring',
-                body: 'Agbada, Senator suits, and silk kaftans cut from breathable luxury fabrics with crisp metallic gold threadwork.',
+                title: 'Neat Tailoring & Strong Fabrics',
+                body: 'Our Agbada, Senator suits, blazers, and kaftans are sewn with clean stitches, breathable fabrics, and neat gold details.',
               },
               {
                 num: '02',
-                title: 'Affordable Luxury Without Markup',
-                body: 'Direct-from-atelier pricing in Naira across sizes S–XL and footwear 40–45 for discerning men and women.',
+                title: 'Luxury You Can Afford',
+                body: 'Clear prices in Naira for both men and women—clothes in sizes S to XL, shoes in sizes 40 to 45, and caps in sharp colours.',
               },
               {
                 num: '03',
-                title: 'Same-Day Ibadan & Global Dispatch',
-                body: 'Dedicated courier across Bodija, Jericho, Oluyole, and Akobo, plus 48–72 hour tracked delivery nationwide.',
+                title: 'Fast Ibadan & Nationwide Delivery',
+                body: 'Same-day delivery around Bodija, Jericho, Oluyole, and Akobo, plus fast 2–3 day delivery to Lagos, Abuja, and every state.',
               },
               {
                 num: '04',
-                title: 'AI Stylist + WhatsApp Concierge',
-                body: 'Instant three-piece outfit curation from Wealth Stylist backed by real fitting support on +234 904 755 2985.',
+                title: 'Free AI Stylist + WhatsApp Support',
+                body: 'Not sure what to wear? Chat with Wealth Stylist for 3 instant outfit ideas, or message us on +234 904 755 2985.',
               },
             ].map((pillar) => (
               <div
@@ -323,15 +323,15 @@ export function HomePage({
         </div>
       </section>
 
-      {/* CLIENT TESTIMONIALS — Hairline Broadsheet Quotes */}
+      {/* CUSTOMER REVIEWS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-24">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-              Client Voices
+              Customer Reviews
             </p>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
-              Worn Across Ibadan &amp; Beyond
+              What Our Customers Say
             </h2>
           </div>
           <a

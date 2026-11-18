@@ -27,8 +27,8 @@ export function WealthStylistDrawer({
     {
       id: 'welcome',
       role: 'assistant',
-      text: 'Welcome to Wealth Fashion Boutique. I am Wealth Stylist, your Ibadan luxury personal shopper. Tell me your occasion, style vibe, or budget in Naira and I will curate 3 exact pieces from our boutique for you.',
-      stylingNote: 'Try asking about an Owambe dinner outfit, matching leather shoes, or statement headwear.',
+      text: 'Welcome to Wealth Fashion Boutique! I am Wealth Stylist, your friendly Ibadan fashion helper. Tell me the event you are going to, your style, or your budget in Naira, and I will pick 3 matching items from our shop for you.',
+      stylingNote: 'Try asking for a party outfit, shoes to match a shirt, or a nice cap.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -123,7 +123,7 @@ export function WealthStylistDrawer({
                 Wealth Stylist
               </h2>
               <p className="text-xs text-[#C6A254]">
-                Ibadan Personal Fashion Assistant
+                Your Friendly Fashion Helper
               </p>
             </div>
           </div>
@@ -180,7 +180,7 @@ export function WealthStylistDrawer({
               {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
                 <div className="mt-3 w-full space-y-2.5">
                   <p className="text-[11px] uppercase tracking-wider font-semibold text-[#6B665C]">
-                    3 Curated Picks From Wealth Fashion Boutique
+                    3 Top Picks For You
                   </p>
                   {msg.recommendedProducts.map((product) => {
                     const defaultOpt = product.options[0] || 'Standard';
@@ -239,7 +239,7 @@ export function WealthStylistDrawer({
           {loading && (
             <div className="flex items-start">
               <div className="bg-white border border-[#E5DFD3] px-4 py-3 text-xs text-[#6B665C]">
-                Curating 3 tailored pieces from our Ibadan collection...
+                Picking 3 nice items from our shop for you...
               </div>
             </div>
           )}

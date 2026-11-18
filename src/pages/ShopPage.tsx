@@ -93,11 +93,11 @@ export function ShopPage({
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-              Wealth Fashion Boutique Catalogue
+              Wealth Fashion Shop
             </p>
             <h1 className="mt-2 font-serif text-3xl sm:text-5xl font-medium text-[#0B0B0D]">
               {selectedCategory === 'All'
-                ? 'The Complete Collection'
+                ? 'All Clothes, Shoes & Caps'
                 : `${selectedCategory} Collection`}
             </h1>
           </div>
@@ -145,10 +145,10 @@ export function ShopPage({
             onChange={(e) =>
               setSelectedGender(e.target.value as 'All' | GenderAudience)
             }
-            aria-label="Filter by collection"
+            aria-label="Filter by Men or Women"
             className="min-h-[44px] px-3 py-2 text-base sm:text-xs font-medium bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
           >
-            <option value="All">All Collections</option>
+            <option value="All">Men &amp; Women</option>
             <option value="Men">Men</option>
             <option value="Women">Women</option>
             <option value="Unisex">Unisex</option>
@@ -159,7 +159,7 @@ export function ShopPage({
             onChange={(e) =>
               setSortBy(e.target.value as 'featured' | 'price-asc' | 'price-desc')
             }
-            aria-label="Sort products"
+            aria-label="Sort items"
             className="min-h-[44px] px-3 py-2 text-base sm:text-xs font-medium bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
           >
             <option value="featured">Sort: Featured</option>
@@ -174,7 +174,7 @@ export function ShopPage({
             />
             <input
               type="search"
-              placeholder="Search pieces..."
+              placeholder="Search clothes, shoes, caps..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full min-h-[44px] pl-9 pr-3 py-2 text-base sm:text-xs bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
@@ -186,10 +186,10 @@ export function ShopPage({
       {filteredProducts.length === 0 ? (
         <div className="py-16 text-center space-y-3 border-b border-[#E0D9CA]">
           <p className="font-serif text-3xl text-[#0B0B0D]">
-            No pieces matched your filter
+            No items matched your search
           </p>
           <p className="text-sm text-[#57534E]">
-            Try clearing your search or switching back to all categories.
+            Try another word or clear your filters to see all items.
           </p>
           <button
             type="button"
@@ -202,7 +202,7 @@ export function ShopPage({
             }}
             className="mt-2 min-h-[44px] px-6 py-2.5 text-xs uppercase tracking-widest font-semibold bg-[#0B0B0D] text-[#C6A254] cursor-pointer"
           >
-            Reset Filters
+            Show All Items
           </button>
         </div>
       ) : (
