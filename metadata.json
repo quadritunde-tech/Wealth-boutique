@@ -1,0 +1,6 @@
+{
+  "name": "Wealth Fashion Boutique",
+  "description": "Ibadan luxury fashion house for bespoke clothing, handcrafted footwear, and signature headwear.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
