@@ -93,10 +93,10 @@ export function ContactSection({ products }: ContactSectionProps) {
         {/* Left: Atelier Details */}
         <div className="lg:col-span-5 space-y-8">
           <div>
-            <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
               Ibadan Concierge
             </p>
-            <h1 className="mt-2 font-serif text-4xl font-semibold text-[#0B0B0D] leading-tight">
+            <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-medium text-[#0B0B0D] leading-[1.08]">
               Visit or Message Our Ibadan Atelier
             </h1>
             <p className="mt-4 text-base text-[#57534E] leading-relaxed">
@@ -104,11 +104,11 @@ export function ContactSection({ products }: ContactSectionProps) {
             </p>
           </div>
 
-          <div className="space-y-5 pt-4 border-t border-[#E5DFD3]">
+          <div className="space-y-6 pt-6 border-t border-[#E0D9CA]">
             <div className="flex items-start gap-3.5">
               <MapPin className="w-5 h-5 text-[#9D7B32] shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs uppercase tracking-wider font-semibold text-[#0B0B0D]">
+                <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D]">
                   Boutique Address
                 </p>
                 <p className="mt-1 text-sm text-[#57534E]">
@@ -123,7 +123,7 @@ export function ContactSection({ products }: ContactSectionProps) {
             <div className="flex items-start gap-3.5">
               <Phone className="w-5 h-5 text-[#9D7B32] shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs uppercase tracking-wider font-semibold text-[#0B0B0D]">
+                <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D]">
                   WhatsApp Concierge
                 </p>
                 <a
@@ -140,7 +140,7 @@ export function ContactSection({ products }: ContactSectionProps) {
             <div className="flex items-start gap-3.5">
               <Instagram className="w-5 h-5 text-[#9D7B32] shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs uppercase tracking-wider font-semibold text-[#0B0B0D]">
+                <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D]">
                   Instagram Lookbook
                 </p>
                 <a
@@ -157,11 +157,11 @@ export function ContactSection({ products }: ContactSectionProps) {
         </div>
 
         {/* Right: Customer Enquiry Form */}
-        <div className="lg:col-span-7 bg-white border border-[#E5DFD3] p-6 sm:p-8">
-          <h2 className="font-serif text-2xl font-semibold text-[#0B0B0D]">
+        <div className="lg:col-span-7 bg-white border border-[#E0D9CA] p-7 sm:p-10">
+          <h2 className="font-serif text-3xl font-medium text-[#0B0B0D]">
             Send a Styling or Order Enquiry
           </h2>
-          <p className="mt-1.5 text-sm text-[#57534E]">
+          <p className="mt-2 text-sm text-[#57534E]">
             Your enquiry is logged immediately for our Ibadan showroom team and receives a personal WhatsApp reply.
           </p>
 

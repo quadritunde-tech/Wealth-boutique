@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ArrowLeft,
   ArrowRight,
-  Award,
   CheckCircle2,
   Instagram,
   Menu,
   MessageCircle,
   Search,
-  ShieldCheck,
   ShoppingBag,
   Sparkles,
-  Truck,
   X,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { CartDrawer } from './components/CartDrawer.tsx';
 import { ContactSection } from './components/ContactSection.tsx';
 import { OrderModal } from './components/OrderModal.tsx';
 import { ProductCard } from './components/ProductCard.tsx';
+import { ProductQuickViewModal } from './components/ProductQuickViewModal.tsx';
 import { ResilientImage } from './components/ResilientImage.tsx';
 import { WealthStylistDrawer } from './components/WealthStylistDrawer.tsx';
 import {
@@ -39,8 +39,24 @@ import { buildWhatsAppUrl } from './utils/format.ts';
 const CART_STORAGE_KEY = 'wfb_shopping_cart_v1';
 const PRODUCTS_CACHE_KEY = 'wfb_products_cache_v2';
 
+function getPageFromPathname(pathname: string): PageView {
+  const clean = pathname.toLowerCase().replace(/\/+$/, '') || '/';
+  if (clean === '/admin') return 'admin';
+  if (clean === '/shop') return 'shop';
+  if (clean === '/about') return 'about';
+  if (clean === '/contact') return 'contact';
+  return 'home';
+}
+
+function getPathnameForPage(target: PageView): string {
+  if (target === 'home') return '/';
+  return `/${target}`;
+}
+
 export default function App() {
-  const [page, setPage] = useState<PageView>('home');
+  const [page, setPage] = useState<PageView>(() =>
+    getPageFromPathname(window.location.pathname)
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [products, setProducts] = useState<Product[]>(() => {
@@ -75,12 +91,24 @@ export default function App() {
 
   const [cartOpen, setCartOpen] = useState(false);
   const [stylistOpen, setStylistOpen] = useState(false);
+  const [quickViewState, setQuickViewState] = useState<{
+    product: Product | null;
+    option: string;
+  }>({ product: null, option: '' });
   const [orderModalState, setOrderModalState] = useState<{
     product: Product | null;
     option: string;
   }>({ product: null, option: '' });
 
   const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    const onPopState = () => {
+      setPage(getPageFromPathname(window.location.pathname));
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -116,6 +144,10 @@ export default function App() {
   const navigateTo = (target: PageView, category?: 'All' | ProductCategory) => {
     if (category) {
       setSelectedCategory(category);
+    }
+    const nextPath = getPathnameForPage(target);
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath);
     }
     setPage(target);
     setMobileMenuOpen(false);
@@ -173,6 +205,10 @@ export default function App() {
     setOrderModalState({ product, option });
   };
 
+  const handleOpenQuickView = (product: Product, option: string) => {
+    setQuickViewState({ product, option });
+  };
+
   const cartCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
     [cart]
@@ -204,61 +240,90 @@ export default function App() {
       products.find((p) => p.category === cat)?.image || fallbackImg;
     return [
       {
+        index: '01',
         title: 'Clothes' as ProductCategory,
-        subtitle: 'Bespoke Agbada, Senator suits, velvet blazers & silk kaftans',
+        subtitle: 'Agbada, Senator suits, velvet blazers & silk kaftans',
         count: products.filter((p) => p.category === 'Clothes').length,
         image: findRep('Clothes', '/src/assets/images/cloth_agbada_black_gold_1794943007631.jpg'),
       },
       {
+        index: '02',
         title: 'Shoes' as ProductCategory,
-        subtitle: 'Calfskin monk-straps, gold-crest loafers, sneakers & heels',
+        subtitle: 'Italian calfskin monk-straps, suede loafers & heels',
         count: products.filter((p) => p.category === 'Shoes').length,
         image: findRep('Shoes', '/src/assets/images/shoe_monk_loafers_1794943009993.jpg'),
       },
       {
+        index: '03',
         title: 'Caps' as ProductCategory,
-        subtitle: 'Velvet gold-weave Fila, bullion wool caps & structured fedoras',
+        subtitle: 'Hand-woven gold Fila, bullion wool caps & fedoras',
         count: products.filter((p) => p.category === 'Caps').length,
         image: findRep('Caps', '/src/assets/images/cap_fila_velvet_1794943012304.jpg'),
       },
     ];
   }, [products]);
 
-  const navItems: Array<{ label: string; target: PageView }> = [
+  // Public storefront navigation strictly excludes Admin
+  const publicNavItems: Array<{ label: string; target: PageView }> = [
     { label: 'Home', target: 'home' },
     { label: 'Shop', target: 'shop' },
     { label: 'About', target: 'about' },
     { label: 'Contact', target: 'contact' },
-    { label: 'Admin', target: 'admin' },
   ];
+
+  // Dedicated /admin URL View — completely separate from end-user storefront UI
+  if (page === 'admin') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
+        <header className="bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/25">
+          <div className="max-w-7xl mx-auto px-6 h-[68px] flex items-center justify-between gap-6">
+            <span className="font-serif text-xl font-semibold tracking-wide text-[#FAF8F4] whitespace-nowrap">
+              Wealth Fashion · Owner Portal
+            </span>
+            <button
+              type="button"
+              onClick={() => navigateTo('home')}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-[#C6A254] hover:text-white transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Storefront</span>
+            </button>
+          </div>
+        </header>
+        <main className="flex-1">
+          <AdminDashboard products={products} onRefreshProducts={fetchProducts} />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
-      {/* TOP NAVIGATION BAR — 3-Zone Contract */}
-      <header className="sticky top-0 z-40 bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/25">
-        <div className="max-w-7xl mx-auto px-6 h-[68px] flex items-center justify-between gap-8">
+      {/* TOP NAVIGATION BAR — Strict 3-Zone Contract, Zero Admin Link */}
+      <header className="sticky top-0 z-40 bg-[#0B0B0D]/95 backdrop-blur-md text-[#FAF8F4] border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 h-[74px] flex items-center justify-between gap-8">
           {/* Zone 1: Single-line Wordmark */}
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="font-serif text-xl font-semibold tracking-tight text-[#FAF8F4] hover:text-[#C6A254] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            className="font-serif text-2xl font-semibold tracking-tight text-[#FAF8F4] hover:text-[#C6A254] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
             Wealth Fashion
           </button>
 
-          {/* Zone 2: 5 concise single-line text nav links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[#FAF8F4]/80">
-            {navItems.map((item) => {
+          {/* Zone 2: 4 clean single-line text nav links */}
+          <nav className="hidden md:flex items-center gap-9 text-[11px] uppercase tracking-[0.18em] font-medium text-[#FAF8F4]/75">
+            {publicNavItems.map((item) => {
               const active = page === item.target;
               return (
                 <button
                   key={item.target}
                   type="button"
                   onClick={() => navigateTo(item.target)}
-                  className={`py-1 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b ${
+                  className={`py-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b ${
                     active
                       ? 'text-[#C6A254] border-[#C6A254]'
-                      : 'border-transparent hover:text-white hover:border-[#C6A254]/50'
+                      : 'border-transparent hover:text-white hover:border-[#C6A254]/40'
                   }`}
                 >
                   {item.label}
@@ -267,12 +332,12 @@ export default function App() {
             })}
           </nav>
 
-          {/* Zone 3: 1 primary action (Shopping Bag) + mobile menu toggle */}
+          {/* Zone 3: 1 primary action (Shopping Bag) */}
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="min-h-[40px] px-4 py-2 text-xs font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#B89242] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+              className="min-h-[40px] px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="tabular-nums">Bag ({cartCount})</span>
@@ -291,13 +356,13 @@ export default function App() {
 
         {/* Mobile Drawer Nav */}
         {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-[#C6A254]/20 bg-[#0B0B0D] px-6 py-4 flex flex-col gap-2">
-            {navItems.map((item) => (
+          <nav className="md:hidden border-t border-white/10 bg-[#0B0B0D] px-6 py-4 flex flex-col gap-1">
+            {publicNavItems.map((item) => (
               <button
                 key={item.target}
                 type="button"
                 onClick={() => navigateTo(item.target)}
-                className={`text-left py-2.5 text-sm font-medium border-b border-white/5 ${
+                className={`text-left py-3 text-xs uppercase tracking-[0.18em] font-medium border-b border-white/5 ${
                   page === item.target ? 'text-[#C6A254]' : 'text-[#FAF8F4]/85'
                 }`}
               >
@@ -312,7 +377,7 @@ export default function App() {
       {toastMessage && (
         <div
           role="status"
-          className="fixed top-20 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/40 shadow-xl text-xs font-medium"
+          className="fixed top-22 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/40 shadow-xl text-xs font-medium"
         >
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{toastMessage}</span>
@@ -323,239 +388,327 @@ export default function App() {
       <main className="flex-1">
         {page === 'home' && (
           <>
-            {/* HERO SECTION */}
-            <section className="bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/20">
-              <div className="max-w-7xl mx-auto px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
-                <div className="lg:col-span-5 flex flex-col justify-center space-y-6">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
-                    Wealth Fashion Boutique · Ibadan, Nigeria
-                  </p>
-                  <h1 className="font-serif text-[clamp(2.5rem,4.5vw,4.15rem)] font-semibold leading-[1.08] tracking-tight text-balance">
-                    Look Rich, Feel Confident
-                  </h1>
-                  <p className="text-base text-[#FAF8F4]/78 leading-relaxed max-w-lg">
-                    Affordable luxury menswear and womenswear curated in Bodija, Ibadan—from hand-embroidered black and gold Agbada to Italian calfskin footwear and signature Fila headwear.
-                  </p>
-                  <div className="pt-2 flex flex-wrap items-center gap-4">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('shop', 'All')}
-                      className="min-h-[46px] px-7 py-3 text-sm font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#B89242] transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer"
-                    >
-                      <span>Explore Collection</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStylistOpen(true)}
-                      className="min-h-[46px] px-6 py-3 text-sm font-medium border border-[#C6A254]/60 text-[#FAF8F4] hover:border-[#C6A254] hover:text-[#C6A254] transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer"
-                    >
-                      <Sparkles className="w-4 h-4 text-[#C6A254]" />
-                      <span>Ask Wealth Stylist</span>
-                    </button>
-                  </div>
-                  <div className="pt-4 border-t border-white/10 flex flex-wrap items-center gap-6 text-xs text-[#FAF8F4]/65">
-                    <span>Clothes · Shoes · Caps</span>
-                    <span aria-hidden="true">/</span>
-                    <span>Men & Women</span>
-                    <span aria-hidden="true">/</span>
-                    <span>Same-Day Ibadan Delivery</span>
-                  </div>
-                </div>
+            {/* HERO SECTION — Editorial Asymmetric Runway Showcase */}
+            <section className="relative bg-[#0B0B0D] text-[#FAF8F4] overflow-hidden">
+              <div className="max-w-7xl mx-auto px-6 pt-10 pb-14 lg:py-0">
+                <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[540px] lg:min-h-[620px]">
+                  <motion.div
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    className="lg:col-span-5 flex flex-col justify-center py-8 lg:py-20 lg:pr-10 z-10"
+                  >
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-[#C6A254] font-semibold">
+                      Ibadan Flagship Atelier · Men & Women
+                    </p>
+                    <h1 className="mt-4 font-serif text-[clamp(2.85rem,5vw,4.75rem)] font-medium leading-[1.02] tracking-tight text-balance">
+                      Look Rich,{' '}
+                      <span className="italic text-[#D8B973] font-normal">
+                        Feel Confident
+                      </span>
+                    </h1>
+                    <p className="mt-6 text-[15px] text-[#FAF8F4]/72 leading-relaxed max-w-md">
+                      Bespoke black-and-gold Agbada, Italian calfskin footwear, and signature velvet headwear—curated in Bodija, Ibadan for effortless presence.
+                    </p>
 
-                <div className="lg:col-span-7">
-                  <div className="relative h-full min-h-[340px] lg:min-h-[480px] overflow-hidden border border-[#C6A254]/25 bg-[#151519]">
+                    <div className="mt-8 flex flex-wrap items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => navigateTo('shop', 'All')}
+                        className="min-h-[46px] px-7 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] transition-colors inline-flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
+                      >
+                        <span>Explore Collection</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStylistOpen(true)}
+                        className="min-h-[46px] px-5 py-3 text-[11px] uppercase tracking-[0.16em] font-medium text-[#FAF8F4]/90 border-b border-[#C6A254]/50 hover:text-[#C6A254] hover:border-[#C6A254] transition-colors inline-flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#C6A254]" />
+                        <span>Consult Wealth Stylist</span>
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  <div className="lg:col-span-7 relative min-h-[340px] lg:min-h-[620px]">
                     <ResilientImage
                       src={HERO_IMAGE}
                       alt="Wealth Fashion Boutique Ibadan luxury black and gold couture couple"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-center"
                     />
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none hidden lg:block absolute inset-y-0 left-0 w-36 bg-gradient-to-r from-[#0B0B0D] to-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Full-width 4-Column Atelier Strip below Hero */}
+              <div className="border-t border-white/10 bg-[#101014]">
+                <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-2 lg:grid-cols-4 gap-6 lg:divide-x lg:divide-white/10">
+                  <div className="lg:pr-6">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
+                      Ibadan Flagship
+                    </p>
+                    <p className="mt-1 text-xs text-[#FAF8F4]/75">
+                      Awolowo Avenue, Bodija
+                    </p>
+                  </div>
+                  <div className="lg:px-6">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
+                      Three Houses
+                    </p>
+                    <p className="mt-1 text-xs text-[#FAF8F4]/75">
+                      Clothes, Shoes & Headwear
+                    </p>
+                  </div>
+                  <div className="lg:px-6">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
+                      Express Courier
+                    </p>
+                    <p className="mt-1 text-xs text-[#FAF8F4]/75">
+                      Same-Day Ibadan & Nationwide
+                    </p>
+                  </div>
+                  <div className="lg:pl-6">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
+                      Direct Concierge
+                    </p>
+                    <p className="mt-1 text-xs text-[#FAF8F4]/75 font-mono">
+                      {BUSINESS_INFO.whatsappDisplay}
+                    </p>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* CATEGORIES SECTION */}
-            <section className="max-w-7xl mx-auto px-6 py-16 lg:py-20">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E5DFD3]">
+            {/* EDITORIAL CATEGORY LOOKBOOK — Asymmetric Mosaic */}
+            <section className="max-w-7xl mx-auto px-6 py-20 lg:py-24">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                     The Boutique Houses
                   </p>
-                  <h2 className="mt-1 font-serif text-3xl font-semibold text-[#0B0B0D]">
-                    Shop By Category
+                  <h2 className="mt-2 font-serif text-4xl font-medium text-[#0B0B0D]">
+                    Curated By Discipline
                   </h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigateTo('shop', 'All')}
-                  className="text-xs font-semibold uppercase tracking-wider text-[#0B0B0D] hover:text-[#9D7B32] inline-flex items-center gap-1.5 cursor-pointer"
+                  className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B0B0D] hover:text-[#9D7B32] inline-flex items-center gap-2 cursor-pointer"
                 >
-                  <span>View All {products.length} Pieces</span>
+                  <span>Explore All {products.length} Pieces</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                {categoryPreviews.map((cat) => (
-                  <button
-                    key={cat.title}
-                    type="button"
-                    onClick={() => navigateTo('shop', cat.title)}
-                    className="group text-left bg-white border border-[#E5DFD3] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
-                  >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-[#F3EFE6]">
+              <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                {/* Primary House: Clothes */}
+                <button
+                  type="button"
+                  onClick={() => navigateTo('shop', categoryPreviews[0].title)}
+                  className="group lg:col-span-6 relative aspect-[4/3] lg:aspect-auto lg:min-h-[460px] overflow-hidden bg-[#151519] text-left cursor-pointer"
+                >
+                  <ResilientImage
+                    src={categoryPreviews[0].image}
+                    alt="Clothes at Wealth Fashion Boutique"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-7 flex items-end justify-between gap-4 text-[#FAF8F4]">
+                    <div>
+                      <p className="font-serif italic text-sm text-[#C6A254]">
+                        {categoryPreviews[0].index} · {categoryPreviews[0].count} Pieces
+                      </p>
+                      <h3 className="mt-1 font-serif text-3xl font-medium">
+                        {categoryPreviews[0].title}
+                      </h3>
+                      <p className="mt-1 text-xs text-[#FAF8F4]/75 max-w-sm">
+                        {categoryPreviews[0].subtitle}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-[#C6A254] shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
+                </button>
+
+                {/* Secondary Houses: Shoes & Caps */}
+                <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+                  {categoryPreviews.slice(1).map((cat) => (
+                    <button
+                      key={cat.title}
+                      type="button"
+                      onClick={() => navigateTo('shop', cat.title)}
+                      className="group relative min-h-[218px] overflow-hidden bg-[#151519] text-left cursor-pointer"
+                    >
                       <ResilientImage
                         src={cat.image}
-                        alt={`${cat.title} collection at Wealth Fashion Boutique`}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        alt={`${cat.title} at Wealth Fashion Boutique`}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       />
-                    </div>
-                    <div className="p-5 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-xs text-[#9D7B32] font-medium tabular-nums">
-                          {cat.count} Curated Pieces
-                        </p>
-                        <h3 className="mt-1 font-serif text-2xl font-semibold text-[#0B0B0D]">
-                          {cat.title}
-                        </h3>
-                        <p className="mt-1 text-xs text-[#57534E] leading-relaxed">
-                          {cat.subtitle}
-                        </p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 p-6 flex items-end justify-between gap-4 text-[#FAF8F4]">
+                        <div>
+                          <p className="font-serif italic text-sm text-[#C6A254]">
+                            {cat.index} · {cat.count} Pieces
+                          </p>
+                          <h3 className="mt-0.5 font-serif text-2xl font-medium">
+                            {cat.title}
+                          </h3>
+                          <p className="mt-0.5 text-xs text-[#FAF8F4]/75">
+                            {cat.subtitle}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-[#C6A254] shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                       </div>
-                      <ArrowRight className="w-5 h-5 text-[#0B0B0D] shrink-0 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </button>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* BEST SELLERS — Clean Gallery Grid */}
+            <section className="max-w-7xl mx-auto px-6 pb-20 lg:pb-24">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
+                    Most Requested
+                  </p>
+                  <h2 className="mt-2 font-serif text-4xl font-medium text-[#0B0B0D]">
+                    House Best Sellers
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('shop', 'All')}
+                  className="px-6 py-2.5 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  View Full Catalogue
+                </button>
+              </div>
+
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                {bestSellers.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    onOrderNow={handleOpenOrderNow}
+                    onQuickView={handleOpenQuickView}
+                  />
                 ))}
               </div>
             </section>
 
-            {/* BEST SELLERS SECTION */}
-            <section className="bg-white border-y border-[#E5DFD3] py-16 lg:py-20">
-              <div className="max-w-7xl mx-auto px-6">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#EFEAE0]">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
-                      Client Favourites
-                    </p>
-                    <h2 className="mt-1 font-serif text-3xl font-semibold text-[#0B0B0D]">
-                      Best Sellers in Ibadan
-                    </h2>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('shop', 'All')}
-                    className="px-5 py-2.5 text-xs font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors whitespace-nowrap cursor-pointer"
-                  >
-                    Browse Full Shop
-                  </button>
+            {/* WHY SHOP WITH US — Obsidian Editorial Manifesto (Zero Card Clones) */}
+            <section className="bg-[#0B0B0D] text-[#FAF8F4] py-20 lg:py-24">
+              <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-28">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
+                    The Wealth Standard
+                  </p>
+                  <h2 className="font-serif text-4xl sm:text-5xl font-medium leading-[1.08] text-balance">
+                    Tailored for Presence,{' '}
+                    <span className="italic text-[#D8B973] font-normal">
+                      Priced with Integrity
+                    </span>
+                  </h2>
+                  <p className="text-sm text-[#FAF8F4]/70 leading-relaxed max-w-md">
+                    Every silhouette in our Bodija showroom balances rich Nigerian sartorial heritage with understated contemporary finish.
+                  </p>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {bestSellers.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onOrderNow={handleOpenOrderNow}
-                    />
+                <div className="lg:col-span-7 divide-y divide-white/12 border-t border-b border-white/12">
+                  {[
+                    {
+                      num: '01',
+                      title: 'Bespoke Ibadan Tailoring',
+                      body: 'Agbada, Senator suits, and silk kaftans cut from breathable luxury fabrics with crisp metallic gold threadwork.',
+                    },
+                    {
+                      num: '02',
+                      title: 'Affordable Luxury Without Markup',
+                      body: 'Direct-from-atelier pricing in Naira across sizes S–XL and footwear 40–45 for discerning men and women.',
+                    },
+                    {
+                      num: '03',
+                      title: 'Same-Day Ibadan & Global Dispatch',
+                      body: 'Dedicated courier across Bodija, Jericho, Oluyole, and Akobo, plus 48–72 hour tracked delivery nationwide.',
+                    },
+                    {
+                      num: '04',
+                      title: 'AI Stylist + WhatsApp Concierge',
+                      body: 'Instant three-piece outfit curation from Wealth Stylist backed by real fitting support on +234 904 755 2985.',
+                    },
+                  ].map((pillar) => (
+                    <div
+                      key={pillar.num}
+                      className="py-7 grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-6 items-baseline"
+                    >
+                      <span className="sm:col-span-2 font-serif italic text-2xl text-[#C6A254]">
+                        {pillar.num}.
+                      </span>
+                      <div className="sm:col-span-10 space-y-1.5">
+                        <h3 className="font-sans text-base font-semibold text-[#FAF8F4]">
+                          {pillar.title}
+                        </h3>
+                        <p className="text-sm text-[#FAF8F4]/68 leading-relaxed">
+                          {pillar.body}
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
             </section>
 
-            {/* WHY SHOP WITH US + TESTIMONIES */}
-            <section className="max-w-7xl mx-auto px-6 py-16 lg:py-20 space-y-16">
-              <div>
-                <div className="max-w-2xl">
-                  <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
-                    The Wealth Standard
+            {/* CLIENT TESTIMONIALS — Hairline Broadsheet Quotes */}
+            <section className="max-w-7xl mx-auto px-6 py-20 lg:py-24">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
+                    Client Voices
                   </p>
-                  <h2 className="mt-1 font-serif text-3xl font-semibold text-[#0B0B0D]">
-                    Why Discerning Clients Shop With Us
+                  <h2 className="mt-2 font-serif text-4xl font-medium text-[#0B0B0D]">
+                    Worn Across Ibadan & Beyond
                   </h2>
                 </div>
-
-                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white border border-[#E5DFD3] p-6 space-y-2.5">
-                    <Award className="w-5 h-5 text-[#9D7B32]" />
-                    <h3 className="font-sans text-base font-semibold text-[#0B0B0D]">
-                      Bespoke Ibadan Tailoring
-                    </h3>
-                    <p className="text-sm text-[#57534E] leading-relaxed">
-                      Every Agbada, Senator suit, and kaftan is cut from breathable luxury fabrics with crisp gold threadwork.
-                    </p>
-                  </div>
-                  <div className="bg-white border border-[#E5DFD3] p-6 space-y-2.5">
-                    <ShieldCheck className="w-5 h-5 text-[#9D7B32]" />
-                    <h3 className="font-sans text-base font-semibold text-[#0B0B0D]">
-                      Affordable Luxury
-                    </h3>
-                    <p className="text-sm text-[#57534E] leading-relaxed">
-                      Direct-from-atelier pricing in Naira with zero middleman markups, crafted for men and women.
-                    </p>
-                  </div>
-                  <div className="bg-white border border-[#E5DFD3] p-6 space-y-2.5">
-                    <Truck className="w-5 h-5 text-[#9D7B32]" />
-                    <h3 className="font-sans text-base font-semibold text-[#0B0B0D]">
-                      Fast Ibadan & Global Dispatch
-                    </h3>
-                    <p className="text-sm text-[#57534E] leading-relaxed">
-                      Same-day courier across Bodija, Jericho, Oluyole, and Akobo, plus 48–72 hour express shipping nationwide and abroad.
-                    </p>
-                  </div>
-                  <div className="bg-white border border-[#E5DFD3] p-6 space-y-2.5">
-                    <MessageCircle className="w-5 h-5 text-[#9D7B32]" />
-                    <h3 className="font-sans text-base font-semibold text-[#0B0B0D]">
-                      Personal Concierge & AI Stylist
-                    </h3>
-                    <p className="text-sm text-[#57534E] leading-relaxed">
-                      Get instant outfit pairings from Wealth Stylist or confirm measurements directly with our team on WhatsApp.
-                    </p>
-                  </div>
-                </div>
+                <a
+                  href={BUSINESS_INFO.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D] hover:text-[#9D7B32]"
+                >
+                  <Instagram className="w-4 h-4" />
+                  <span>{BUSINESS_INFO.instagramHandle}</span>
+                </a>
               </div>
 
-              {/* Client Testimonies */}
-              <div className="pt-12 border-t border-[#E5DFD3]">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
-                      Client Voices
-                    </p>
-                    <h2 className="mt-1 font-serif text-3xl font-semibold text-[#0B0B0D]">
-                      Worn Across Ibadan & Beyond
-                    </h2>
-                  </div>
-                  <a
-                    href={BUSINESS_INFO.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#0B0B0D] hover:text-[#9D7B32]"
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-[#E0D9CA]">
+                {TESTIMONIALS.map((t, idx) => (
+                  <blockquote
+                    key={t.name}
+                    className={`flex flex-col justify-between gap-6 ${
+                      idx === 0
+                        ? 'md:pr-8'
+                        : idx === 1
+                          ? 'md:px-8'
+                          : 'md:pl-8'
+                    }`}
                   >
-                    <Instagram className="w-4 h-4" />
-                    <span>See Looks on {BUSINESS_INFO.instagramHandle}</span>
-                  </a>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {TESTIMONIALS.map((t) => (
-                    <blockquote
-                      key={t.name}
-                      className="bg-white border border-[#E5DFD3] p-6 flex flex-col justify-between gap-5"
-                    >
-                      <p className="text-sm text-[#292524] leading-relaxed">
-                        “{t.quote}”
+                    <p className="font-serif text-xl italic text-[#1C1917] leading-relaxed">
+                      “{t.quote}”
+                    </p>
+                    <footer>
+                      <p className="text-sm font-semibold text-[#0B0B0D]">
+                        {t.name}
                       </p>
-                      <footer className="pt-4 border-t border-[#EFEAE0]">
-                        <p className="text-sm font-semibold text-[#0B0B0D]">
-                          {t.name}
-                        </p>
-                        <p className="text-xs text-[#6B665C]">{t.role}</p>
-                      </footer>
-                    </blockquote>
-                  ))}
-                </div>
+                      <p className="text-xs text-[#6B665C]">{t.role}</p>
+                    </footer>
+                  </blockquote>
+                ))}
               </div>
             </section>
           </>
@@ -563,28 +716,33 @@ export default function App() {
 
         {/* SHOP / PRODUCTS PAGE */}
         {page === 'shop' && (
-          <section className="max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E5DFD3]">
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22 }}
+            className="max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-10"
+          >
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-8 border-b border-[#E0D9CA]">
               <div>
-                <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
-                  Wealth Fashion Boutique Collection
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
+                  Wealth Fashion Boutique
                 </p>
-                <h1 className="mt-1 font-serif text-4xl font-semibold text-[#0B0B0D]">
-                  Curated Luxury Catalogue
+                <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-medium text-[#0B0B0D]">
+                  The Complete Collection
                 </h1>
               </div>
               <button
                 type="button"
                 onClick={() => setStylistOpen(true)}
-                className="px-4 py-2.5 text-xs font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] inline-flex items-center gap-2 self-start md:self-auto cursor-pointer"
+                className="px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] inline-flex items-center gap-2 self-start md:self-auto cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Need Styling Advice? Ask Wealth Stylist</span>
+                <span>Ask Wealth Stylist</span>
               </button>
             </div>
 
-            {/* Filters Bar */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-[#E5DFD3] p-4">
+            {/* Minimalist Editorial Filter Strip */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-[#E0D9CA]">
               <div className="flex flex-wrap items-center gap-2">
                 {(['All', 'Clothes', 'Shoes', 'Caps'] as const).map((cat) => {
                   const active = selectedCategory === cat;
@@ -600,7 +758,7 @@ export default function App() {
                       className={`px-4 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         active
                           ? 'bg-[#0B0B0D] text-[#C6A254]'
-                          : 'bg-[#FAF8F4] text-[#44403C] border border-[#DCD5C7] hover:border-[#0B0B0D]'
+                          : 'bg-transparent text-[#57534E] border border-[#DCD5C7] hover:border-[#0B0B0D] hover:text-[#0B0B0D]'
                       }`}
                     >
                       {cat} ({count})
@@ -616,7 +774,7 @@ export default function App() {
                     setSelectedGender(e.target.value as 'All' | GenderAudience)
                   }
                   aria-label="Filter by collection"
-                  className="min-h-[40px] px-3 py-2 text-xs font-medium bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                  className="min-h-[40px] px-3 py-2 text-xs font-medium bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                 >
                   <option value="All">All Collections</option>
                   <option value="Men">Men</option>
@@ -634,15 +792,15 @@ export default function App() {
                     placeholder="Search outfits, shoes, caps..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-h-[40px] pl-9 pr-3 py-2 text-xs bg-[#FAF8F4] border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
+                    className="w-full min-h-[40px] pl-9 pr-3 py-2 text-xs bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {filteredProducts.length === 0 ? (
-              <div className="bg-white border border-[#E5DFD3] p-12 text-center space-y-3">
-                <p className="font-serif text-2xl text-[#0B0B0D]">
+              <div className="py-16 text-center space-y-3 border-b border-[#E0D9CA]">
+                <p className="font-serif text-3xl text-[#0B0B0D]">
                   No pieces matched your filter
                 </p>
                 <p className="text-sm text-[#57534E]">
@@ -655,35 +813,41 @@ export default function App() {
                     setSelectedGender('All');
                     setSearchQuery('');
                   }}
-                  className="mt-2 px-5 py-2.5 text-xs font-semibold bg-[#0B0B0D] text-[#C6A254] cursor-pointer"
+                  className="mt-2 px-6 py-2.5 text-xs uppercase tracking-widest font-semibold bg-[#0B0B0D] text-[#C6A254] cursor-pointer"
                 >
                   Reset Filters
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                 {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
                     onAddToCart={handleAddToCart}
                     onOrderNow={handleOpenOrderNow}
+                    onQuickView={handleOpenQuickView}
                   />
                 ))}
               </div>
             )}
-          </section>
+          </motion.section>
         )}
 
         {/* ABOUT PAGE */}
         {page === 'about' && (
-          <section className="max-w-7xl mx-auto px-6 py-16 lg:py-24 space-y-16">
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22 }}
+            className="max-w-7xl mx-auto px-6 py-16 lg:py-24 space-y-20"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               <div className="lg:col-span-6 space-y-6">
-                <p className="text-xs uppercase tracking-widest text-[#9D7B32] font-semibold">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
                   Our Story · Ibadan, Nigeria
                 </p>
-                <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-[#0B0B0D] leading-tight text-balance">
+                <h1 className="font-serif text-4xl sm:text-5xl font-medium text-[#0B0B0D] leading-[1.08] text-balance">
                   Affordable Luxury Fashion for Everyone
                 </h1>
                 <p className="text-base text-[#44403C] leading-relaxed">
@@ -696,14 +860,14 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => navigateTo('shop', 'All')}
-                    className="min-h-[44px] px-6 py-2.5 text-sm font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] cursor-pointer"
+                    className="min-h-[44px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] cursor-pointer"
                   >
                     Shop the Collection
                   </button>
                   <button
                     type="button"
                     onClick={() => navigateTo('contact')}
-                    className="min-h-[44px] px-6 py-2.5 text-sm font-medium border border-[#0B0B0D] text-[#0B0B0D] hover:bg-white cursor-pointer"
+                    className="min-h-[44px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-medium border border-[#0B0B0D] text-[#0B0B0D] hover:bg-white cursor-pointer"
                   >
                     Book a Fitting
                   </button>
@@ -711,7 +875,7 @@ export default function App() {
               </div>
 
               <div className="lg:col-span-6">
-                <div className="aspect-[4/3] overflow-hidden border border-[#E5DFD3] bg-[#151519]">
+                <div className="aspect-[4/3] overflow-hidden bg-[#151519]">
                   <ResilientImage
                     src={ATELIER_IMAGE}
                     alt="Wealth Fashion Boutique luxury showroom in Bodija Ibadan"
@@ -721,65 +885,60 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 border-t border-[#E5DFD3]">
-              <div className="bg-white border border-[#E5DFD3] p-7">
-                <p className="font-mono text-xs text-[#9D7B32] font-semibold">01. Apparel</p>
-                <h2 className="mt-2 font-serif text-2xl font-semibold text-[#0B0B0D]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-0 md:divide-x md:divide-[#E0D9CA] pt-14 border-t border-[#E0D9CA]">
+              <div className="md:pr-8">
+                <p className="font-serif italic text-xl text-[#9D7B32]">01. Apparel</p>
+                <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
                   Tailored Clothes
                 </h2>
-                <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
+                <p className="mt-3 text-sm text-[#57534E] leading-relaxed">
                   Sizes S through XL crafted in breathable wool, velvet, cashmere, and silk for weddings, boardrooms, and Ibadan evenings.
                 </p>
               </div>
-              <div className="bg-white border border-[#E5DFD3] p-7">
-                <p className="font-mono text-xs text-[#9D7B32] font-semibold">02. Footwear</p>
-                <h2 className="mt-2 font-serif text-2xl font-semibold text-[#0B0B0D]">
+              <div className="md:px-8">
+                <p className="font-serif italic text-xl text-[#9D7B32]">02. Footwear</p>
+                <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
                   Signature Shoes
                 </h2>
-                <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
+                <p className="mt-3 text-sm text-[#57534E] leading-relaxed">
                   Sizes 40 to 45 spanning double monk-straps, gold-crest loafers, court sneakers, Chelsea boots, and chain-trim heels.
                 </p>
               </div>
-              <div className="bg-white border border-[#E5DFD3] p-7">
-                <p className="font-mono text-xs text-[#9D7B32] font-semibold">03. Headwear</p>
-                <h2 className="mt-2 font-serif text-2xl font-semibold text-[#0B0B0D]">
+              <div className="md:pl-8">
+                <p className="font-serif italic text-xl text-[#9D7B32]">03. Headwear</p>
+                <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
                   Crowning Caps
                 </h2>
-                <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
+                <p className="mt-3 text-sm text-[#57534E] leading-relaxed">
                   Rich Nigerian velvet Fila, bullion wool caps, crisp alabaster snapbacks, and leather-trimmed fedoras in signature colourways.
                 </p>
               </div>
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* CONTACT PAGE */}
         {page === 'contact' && <ContactSection products={products} />}
-
-        {/* ADMIN DASHBOARD */}
-        {page === 'admin' && (
-          <AdminDashboard products={products} onRefreshProducts={fetchProducts} />
-        )}
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-[#0B0B0D] text-[#FAF8F4] border-t border-[#C6A254]/25">
-        <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-12 gap-8">
+      {/* FOOTER — Public Links Only, Zero Admin Exposure */}
+      <footer className="bg-[#0B0B0D] text-[#FAF8F4] border-t border-[#C6A254]/20">
+        <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-12 gap-10">
           <div className="md:col-span-5 space-y-3">
-            <p className="font-serif text-2xl font-semibold text-[#FAF8F4]">
+            <p className="font-serif text-3xl font-medium text-[#FAF8F4]">
               Wealth Fashion Boutique
             </p>
-            <p className="text-sm text-[#FAF8F4]/70 max-w-sm leading-relaxed">
+            <p className="text-sm text-[#FAF8F4]/68 max-w-sm leading-relaxed">
               Look Rich, Feel Confident. Ibadan destination for luxury clothes, handcrafted footwear, and signature caps for men and women.
             </p>
           </div>
 
-          <div className="md:col-span-3 space-y-2 text-sm">
-            <p className="text-xs uppercase tracking-widest text-[#C6A254] font-semibold">
-              Navigation
+          <div className="md:col-span-3 space-y-3 text-sm">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
+              Boutique
             </p>
-            <div className="flex flex-col gap-1.5 text-[#FAF8F4]/75">
-              {navItems.map((item) => (
+            <div className="flex flex-col gap-2 text-[#FAF8F4]/75">
+              {publicNavItems.map((item) => (
                 <button
                   key={item.target}
                   type="button"
@@ -792,8 +951,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="md:col-span-4 space-y-2 text-sm text-[#FAF8F4]/75">
-            <p className="text-xs uppercase tracking-widest text-[#C6A254] font-semibold">
+          <div className="md:col-span-4 space-y-2.5 text-sm text-[#FAF8F4]/75">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
               Ibadan Showroom
             </p>
             <p>{BUSINESS_INFO.location}</p>
@@ -821,7 +980,7 @@ export default function App() {
             </p>
           </div>
         </div>
-        <div className="border-t border-white/10 py-4 px-6 text-center text-xs text-[#FAF8F4]/50">
+        <div className="border-t border-white/10 py-5 px-6 text-center text-xs text-[#FAF8F4]/45">
           © {new Date().getFullYear()} Wealth Fashion Boutique · Ibadan, Nigeria
         </div>
       </footer>
@@ -832,7 +991,7 @@ export default function App() {
           type="button"
           onClick={() => setStylistOpen(true)}
           aria-label="Open Wealth Stylist AI Fashion Assistant"
-          className="h-11 px-4 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/60 shadow-xl hover:bg-[#1C1C22] transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap cursor-pointer"
+          className="h-11 px-4 bg-[#0B0B0D] text-[#C6A254] border border-[#C6A254]/50 shadow-2xl hover:bg-[#1C1C22] transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap cursor-pointer"
         >
           <Sparkles className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span>Wealth Stylist</span>
@@ -845,7 +1004,7 @@ export default function App() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Order via WhatsApp"
-          className="h-11 px-4 bg-[#C6A254] text-[#0B0B0D] shadow-xl hover:bg-[#B89242] transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap"
+          className="h-11 px-4 bg-[#C6A254] text-[#0B0B0D] shadow-2xl hover:bg-[#D4B36A] transition-transform hover:-translate-y-0.5 inline-flex items-center gap-2 text-xs font-semibold whitespace-nowrap"
         >
           <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span className="hidden sm:inline">WhatsApp Order</span>
@@ -871,6 +1030,14 @@ export default function App() {
           setStylistOpen(false);
           handleOpenOrderNow(prod, opt);
         }}
+      />
+
+      <ProductQuickViewModal
+        product={quickViewState.product}
+        initialOption={quickViewState.option}
+        onClose={() => setQuickViewState({ product: null, option: '' })}
+        onAddToCart={handleAddToCart}
+        onOrderNow={handleOpenOrderNow}
       />
 
       <OrderModal
