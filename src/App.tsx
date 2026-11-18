@@ -1,52 +1,52 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
-  ArrowRight,
   CheckCircle2,
-  Instagram,
   Menu,
   MessageCircle,
-  Search,
   ShoppingBag,
   Sparkles,
   X,
 } from 'lucide-react';
-import { motion } from 'motion/react';
-import { ProductCard } from './components/ProductCard.tsx';
-import { ResilientImage } from './components/ResilientImage.tsx';
 import {
-  ATELIER_IMAGE,
   BUSINESS_INFO,
   HERO_IMAGE,
   INITIAL_PRODUCTS,
-  TESTIMONIALS,
 } from './data/seedCatalog.ts';
+import { HomePage } from './pages/HomePage.tsx';
 import {
   CartItem,
-  GenderAudience,
   PageView,
   Product,
   ProductCategory,
 } from './types.ts';
-import { buildWhatsAppUrl } from './utils/format.ts';
+import { buildWhatsAppUrl, formatNaira } from './utils/format.ts';
 
-// Code-split drawers, modals, contact form & private admin portal for ultra-fast initial load
+// Code-split secondary pages, drawers, modals & private admin portal for maximum LCP speed
+const ShopPage = lazy(() =>
+  import('./pages/ShopPage.tsx').then((m) => ({ default: m.ShopPage }))
+);
+const ProductDetailPage = lazy(() =>
+  import('./pages/ProductDetailPage.tsx').then((m) => ({
+    default: m.ProductDetailPage,
+  }))
+);
+const AboutPage = lazy(() =>
+  import('./pages/AboutPage.tsx').then((m) => ({ default: m.AboutPage }))
+);
+const ContactPage = lazy(() =>
+  import('./pages/ContactPage.tsx').then((m) => ({ default: m.ContactPage }))
+);
 const AdminDashboard = lazy(() =>
-  import('./components/AdminDashboard.tsx').then((m) => ({ default: m.AdminDashboard }))
+  import('./components/AdminDashboard.tsx').then((m) => ({
+    default: m.AdminDashboard,
+  }))
 );
 const CartDrawer = lazy(() =>
   import('./components/CartDrawer.tsx').then((m) => ({ default: m.CartDrawer }))
 );
-const ContactSection = lazy(() =>
-  import('./components/ContactSection.tsx').then((m) => ({ default: m.ContactSection }))
-);
 const OrderModal = lazy(() =>
   import('./components/OrderModal.tsx').then((m) => ({ default: m.OrderModal }))
-);
-const ProductQuickViewModal = lazy(() =>
-  import('./components/ProductQuickViewModal.tsx').then((m) => ({
-    default: m.ProductQuickViewModal,
-  }))
 );
 const WealthStylistDrawer = lazy(() =>
   import('./components/WealthStylistDrawer.tsx').then((m) => ({
@@ -57,58 +57,49 @@ const WealthStylistDrawer = lazy(() =>
 const CART_STORAGE_KEY = 'wfb_shopping_cart_v1';
 const PRODUCTS_CACHE_KEY = 'wfb_products_cache_v2';
 
-const SEO_PAGE_META: Record<
-  PageView,
-  { title: string; description: string; robots: string }
-> = {
-  home: {
-    title: 'Wealth Fashion Boutique – Luxury Ibadan Clothing, Shoes & Caps',
-    description:
-      'Shop affordable luxury clothes, Italian calfskin shoes, and signature caps for men and women in Bodija, Ibadan. Order online or via WhatsApp.',
-    robots: 'index, follow',
-  },
-  shop: {
-    title: 'Shop Luxury Clothes, Shoes & Caps – Wealth Fashion Boutique',
-    description:
-      'Browse bespoke Agbada, Senator suits, velvet blazers, calfskin shoes, and velvet Fila caps in Naira. Same-day delivery across Ibadan and nationwide.',
-    robots: 'index, follow',
-  },
-  about: {
-    title: 'Our Story – Wealth Fashion Boutique Ibadan Atelier',
-    description:
-      'Discover Wealth Fashion Boutique in Bodija, Ibadan: affordable luxury menswear, womenswear, handcrafted footwear, and signature headwear.',
-    robots: 'index, follow',
-  },
-  contact: {
-    title: 'Contact & Visit Us in Ibadan – Wealth Fashion Boutique',
-    description:
-      'Visit Plot 14 Awolowo Avenue, Bodija, Ibadan or message our WhatsApp concierge (+234 904 755 2985) for bespoke fittings and express orders.',
-    robots: 'index, follow',
-  },
-  admin: {
-    title: 'Owner Portal – Wealth Fashion Boutique',
-    description: 'Private owner management dashboard for Wealth Fashion Boutique.',
-    robots: 'noindex, nofollow',
-  },
-};
-
-function getPageFromPathname(pathname: string): PageView {
-  const clean = pathname.toLowerCase().replace(/\/+$/, '') || '/';
-  if (clean === '/admin') return 'admin';
-  if (clean === '/shop') return 'shop';
-  if (clean === '/about') return 'about';
-  if (clean === '/contact') return 'contact';
-  return 'home';
+interface AppRoute {
+  page: PageView;
+  category: 'All' | ProductCategory;
+  productId?: string;
 }
 
-function getPathnameForPage(target: PageView): string {
-  if (target === 'home') return '/';
-  return `/${target}`;
+function parseRoute(pathname: string): AppRoute {
+  const clean = pathname.replace(/\/+$/, '') || '/';
+  const lower = clean.toLowerCase();
+
+  if (lower === '/admin') {
+    return { page: 'admin', category: 'All' };
+  }
+  if (lower === '/about') {
+    return { page: 'about', category: 'All' };
+  }
+  if (lower === '/contact') {
+    return { page: 'contact', category: 'All' };
+  }
+  if (lower === '/shop') {
+    return { page: 'shop', category: 'All' };
+  }
+  if (lower === '/shop/clothes') {
+    return { page: 'shop', category: 'Clothes' };
+  }
+  if (lower === '/shop/shoes') {
+    return { page: 'shop', category: 'Shoes' };
+  }
+  if (lower === '/shop/caps') {
+    return { page: 'shop', category: 'Caps' };
+  }
+  if (lower.startsWith('/product/')) {
+    const id = decodeURIComponent(clean.slice('/product/'.length));
+    if (id) {
+      return { page: 'product', category: 'All', productId: id };
+    }
+  }
+  return { page: 'home', category: 'All' };
 }
 
 export default function App() {
-  const [page, setPage] = useState<PageView>(() =>
-    getPageFromPathname(window.location.pathname)
+  const [route, setRoute] = useState<AppRoute>(() =>
+    parseRoute(window.location.pathname)
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -138,16 +129,8 @@ export default function App() {
     return [];
   });
 
-  const [selectedCategory, setSelectedCategory] = useState<'All' | ProductCategory>('All');
-  const [selectedGender, setSelectedGender] = useState<'All' | GenderAudience>('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
   const [cartOpen, setCartOpen] = useState(false);
   const [stylistOpen, setStylistOpen] = useState(false);
-  const [quickViewState, setQuickViewState] = useState<{
-    product: Product | null;
-    option: string;
-  }>({ product: null, option: '' });
   const [orderModalState, setOrderModalState] = useState<{
     product: Product | null;
     option: string;
@@ -157,16 +140,81 @@ export default function App() {
 
   useEffect(() => {
     const onPopState = () => {
-      setPage(getPageFromPathname(window.location.pathname));
+      setRoute(parseRoute(window.location.pathname));
+      setMobileMenuOpen(false);
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // Sync per-route SEO tags, canonical URL, OpenGraph & Twitter tags
+  const navigate = useCallback((path: string) => {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    if (window.location.pathname !== normalized) {
+      window.history.pushState({}, '', normalized);
+    }
+    setRoute(parseRoute(normalized));
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleAnchorNav = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    path: string
+  ) => {
+    if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      navigate(path);
+    }
+  };
+
+  const activeProduct = useMemo(() => {
+    if (route.page !== 'product' || !route.productId) return undefined;
+    return products.find((p) => p.id === route.productId);
+  }, [route, products]);
+
+  // Sync dynamic per-page & per-product SEO tags, OpenGraph, Twitter & Canonical URL
   useEffect(() => {
-    const meta = SEO_PAGE_META[page];
-    document.title = meta.title;
+    let title = 'Wealth Fashion Boutique – Luxury Ibadan Clothing, Shoes & Caps';
+    let description =
+      'Shop affordable luxury clothes, Italian calfskin shoes, and signature caps for men and women in Bodija, Ibadan. Order online or via WhatsApp.';
+    let robots = 'index, follow';
+    let ogImage = window.location.origin + HERO_IMAGE;
+
+    if (route.page === 'shop') {
+      if (route.category === 'All') {
+        title = 'Shop Luxury Clothes, Shoes & Caps – Wealth Fashion Boutique';
+        description =
+          'Browse bespoke Agbada, Senator suits, velvet blazers, calfskin shoes, and velvet Fila caps in Naira. Same-day delivery across Ibadan and nationwide.';
+      } else {
+        title = `Shop ${route.category} – Wealth Fashion Boutique Ibadan`;
+        description = `Explore our curated ${route.category} collection in Naira at Wealth Fashion Boutique, Bodija, Ibadan. Order online or via WhatsApp concierge.`;
+      }
+    } else if (route.page === 'product') {
+      if (activeProduct) {
+        title = `${activeProduct.name} (${formatNaira(activeProduct.price)}) – Wealth Fashion Boutique`;
+        description = activeProduct.description;
+        ogImage = activeProduct.image.startsWith('http')
+          ? activeProduct.image
+          : window.location.origin + activeProduct.image;
+      } else {
+        title = 'Piece Unavailable – Wealth Fashion Boutique';
+        description = 'Browse our live Ibadan collection of clothes, shoes, and caps.';
+      }
+    } else if (route.page === 'about') {
+      title = 'Our Story – Wealth Fashion Boutique Ibadan Atelier';
+      description =
+        'Discover Wealth Fashion Boutique in Bodija, Ibadan: affordable luxury menswear, womenswear, handcrafted footwear, and signature headwear.';
+    } else if (route.page === 'contact') {
+      title = 'Contact & Visit Us in Ibadan – Wealth Fashion Boutique';
+      description =
+        'Visit Plot 14 Awolowo Avenue, Bodija, Ibadan or message our WhatsApp concierge (+234 904 755 2985) for bespoke fittings and express orders.';
+    } else if (route.page === 'admin') {
+      title = 'Owner Portal – Wealth Fashion Boutique';
+      description = 'Private owner management dashboard for Wealth Fashion Boutique.';
+      robots = 'noindex, nofollow';
+    }
+
+    document.title = title;
 
     const currentUrl = window.location.origin + window.location.pathname;
     const setMetaTag = (attr: 'name' | 'property', key: string, content: string) => {
@@ -179,13 +227,15 @@ export default function App() {
       el.setAttribute('content', content);
     };
 
-    setMetaTag('name', 'description', meta.description);
-    setMetaTag('name', 'robots', meta.robots);
-    setMetaTag('property', 'og:title', meta.title);
-    setMetaTag('property', 'og:description', meta.description);
+    setMetaTag('name', 'description', description);
+    setMetaTag('name', 'robots', robots);
+    setMetaTag('property', 'og:title', title);
+    setMetaTag('property', 'og:description', description);
+    setMetaTag('property', 'og:image', ogImage);
     setMetaTag('property', 'og:url', currentUrl);
-    setMetaTag('name', 'twitter:title', meta.title);
-    setMetaTag('name', 'twitter:description', meta.description);
+    setMetaTag('name', 'twitter:title', title);
+    setMetaTag('name', 'twitter:description', description);
+    setMetaTag('name', 'twitter:image', ogImage);
 
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
@@ -194,11 +244,11 @@ export default function App() {
       document.head.appendChild(canonical);
     }
     canonical.setAttribute('href', currentUrl);
-  }, [page]);
+  }, [route, activeProduct]);
 
-  // Inject dynamic Product ItemList JSON-LD for rich e-commerce search snippets
+  // Inject dynamic Product or ItemList JSON-LD for rich e-commerce search snippets
   useEffect(() => {
-    if (page === 'admin' || products.length === 0) return;
+    if (route.page === 'admin' || products.length === 0) return;
     const scriptId = 'wfb-catalog-jsonld';
     let scriptEl = document.getElementById(scriptId) as HTMLScriptElement | null;
     if (!scriptEl) {
@@ -207,6 +257,34 @@ export default function App() {
       scriptEl.type = 'application/ld+json';
       document.head.appendChild(scriptEl);
     }
+
+    if (route.page === 'product' && activeProduct) {
+      scriptEl.text = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: activeProduct.name,
+        description: activeProduct.description,
+        category: activeProduct.category,
+        image: activeProduct.image.startsWith('http')
+          ? activeProduct.image
+          : window.location.origin + activeProduct.image,
+        brand: {
+          '@type': 'Brand',
+          name: 'Wealth Fashion Boutique',
+        },
+        offers: {
+          '@type': 'Offer',
+          url: window.location.origin + `/product/${activeProduct.id}`,
+          priceCurrency: 'NGN',
+          price: String(activeProduct.price),
+          availability: activeProduct.inStock
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/PreOrder',
+        },
+      });
+      return;
+    }
+
     const itemList = {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
@@ -214,12 +292,15 @@ export default function App() {
       itemListElement: products.slice(0, 15).map((p, idx) => ({
         '@type': 'ListItem',
         position: idx + 1,
+        url: window.location.origin + `/product/${p.id}`,
         item: {
           '@type': 'Product',
           name: p.name,
           description: p.description,
           category: p.category,
-          image: window.location.origin + p.image,
+          image: p.image.startsWith('http')
+            ? p.image
+            : window.location.origin + p.image,
           brand: {
             '@type': 'Brand',
             name: 'Wealth Fashion Boutique',
@@ -236,7 +317,7 @@ export default function App() {
       })),
     };
     scriptEl.text = JSON.stringify(itemList);
-  }, [products, page]);
+  }, [products, route.page, activeProduct]);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -269,45 +350,35 @@ export default function App() {
     }
   }, [cart]);
 
-  const navigateTo = (target: PageView, category?: 'All' | ProductCategory) => {
-    if (category) {
-      setSelectedCategory(category);
-    }
-    const nextPath = getPathnameForPage(target);
-    if (window.location.pathname !== nextPath) {
-      window.history.pushState({}, '', nextPath);
-    }
-    setPage(target);
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleAddToCart = (product: Product, selectedOption: string) => {
-    const itemId = `${product.id}__${selectedOption}`;
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === itemId);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: itemId,
-          productId: product.id,
-          name: product.name,
-          category: product.category,
-          price: product.price,
-          image: product.image,
-          selectedOption,
-          optionLabel: product.optionLabel,
-          quantity: 1,
-        },
-      ];
-    });
-    showToast(`Added ${product.name} (${selectedOption}) to your bag`);
-  };
+  const handleAddToCart = useCallback(
+    (product: Product, selectedOption: string) => {
+      const itemId = `${product.id}__${selectedOption}`;
+      setCart((prev) => {
+        const existing = prev.find((item) => item.id === itemId);
+        if (existing) {
+          return prev.map((item) =>
+            item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
+          );
+        }
+        return [
+          ...prev,
+          {
+            id: itemId,
+            productId: product.id,
+            name: product.name,
+            category: product.category,
+            price: product.price,
+            image: product.image,
+            selectedOption,
+            optionLabel: product.optionLabel,
+            quantity: 1,
+          },
+        ];
+      });
+      showToast(`Added ${product.name} (${selectedOption}) to your bag`);
+    },
+    [showToast]
+  );
 
   const handleUpdateCartQuantity = (itemId: string, delta: number) => {
     setCart((prev) =>
@@ -329,13 +400,9 @@ export default function App() {
     setCart([]);
   };
 
-  const handleOpenOrderNow = (product: Product, option: string) => {
+  const handleOpenOrderNow = useCallback((product: Product, option: string) => {
     setOrderModalState({ product, option });
-  };
-
-  const handleOpenQuickView = (product: Product, option: string) => {
-    setQuickViewState({ product, option });
-  };
+  }, []);
 
   const cartCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
@@ -347,22 +414,6 @@ export default function App() {
     return (featured.length >= 6 ? featured : products).slice(0, 6);
   }, [products]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const catMatch =
-        selectedCategory === 'All' || p.category === selectedCategory;
-      const genderMatch =
-        selectedGender === 'All' || p.gender === selectedGender;
-      const q = searchQuery.trim().toLowerCase();
-      const textMatch =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q);
-      return catMatch && genderMatch && textMatch;
-    });
-  }, [products, selectedCategory, selectedGender, searchQuery]);
-
   const categoryPreviews = useMemo(() => {
     const findRep = (cat: ProductCategory, fallbackImg: string) =>
       products.find((p) => p.category === cat)?.image || fallbackImg;
@@ -372,41 +423,47 @@ export default function App() {
         title: 'Clothes' as ProductCategory,
         subtitle: 'Agbada, Senator suits, velvet blazers & silk kaftans',
         count: products.filter((p) => p.category === 'Clothes').length,
-        image: findRep('Clothes', '/src/assets/images/cloth_agbada_black_gold_1794943007631.jpg'),
+        image: findRep(
+          'Clothes',
+          '/src/assets/images/cloth_agbada_black_gold_1794943007631.jpg'
+        ),
       },
       {
         index: '02',
         title: 'Shoes' as ProductCategory,
         subtitle: 'Italian calfskin monk-straps, suede loafers & heels',
         count: products.filter((p) => p.category === 'Shoes').length,
-        image: findRep('Shoes', '/src/assets/images/shoe_monk_loafers_1794943009993.jpg'),
+        image: findRep(
+          'Shoes',
+          '/src/assets/images/shoe_monk_loafers_1794943009993.jpg'
+        ),
       },
       {
         index: '03',
         title: 'Caps' as ProductCategory,
         subtitle: 'Hand-woven gold Fila, bullion wool caps & fedoras',
         count: products.filter((p) => p.category === 'Caps').length,
-        image: findRep('Caps', '/src/assets/images/cap_fila_velvet_1794943012304.jpg'),
+        image: findRep(
+          'Caps',
+          '/src/assets/images/cap_fila_velvet_1794943012304.jpg'
+        ),
       },
     ];
   }, [products]);
 
   // Public storefront navigation strictly excludes Admin
-  const publicNavItems: Array<{ label: string; target: PageView }> = [
-    { label: 'Home', target: 'home' },
-    { label: 'Shop', target: 'shop' },
-    { label: 'About', target: 'about' },
-    { label: 'Contact', target: 'contact' },
+  const publicNavItems: Array<{ label: string; href: string; match: PageView }> = [
+    { label: 'Home', href: '/', match: 'home' },
+    { label: 'Shop', href: '/shop', match: 'shop' },
+    { label: 'About', href: '/about', match: 'about' },
+    { label: 'Contact', href: '/contact', match: 'contact' },
   ];
 
   const anyOverlayOpen =
-    cartOpen ||
-    stylistOpen ||
-    Boolean(quickViewState.product) ||
-    Boolean(orderModalState.product);
+    cartOpen || stylistOpen || Boolean(orderModalState.product);
 
   // Dedicated /admin URL View — completely separate from end-user storefront UI
-  if (page === 'admin') {
+  if (route.page === 'admin') {
     return (
       <div className="min-h-[100dvh] flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
         <header className="bg-[#0B0B0D] text-[#FAF8F4] border-b border-[#C6A254]/25">
@@ -414,14 +471,14 @@ export default function App() {
             <span className="font-serif text-lg sm:text-xl font-semibold tracking-wide text-[#FAF8F4] whitespace-nowrap truncate">
               Wealth Fashion · Owner Portal
             </span>
-            <button
-              type="button"
-              onClick={() => navigateTo('home')}
-              className="min-h-[44px] inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-[#C6A254] hover:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            <a
+              href="/"
+              onClick={(e) => handleAnchorNav(e, '/')}
+              className="min-h-[44px] inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-[#C6A254] hover:text-white transition-colors whitespace-nowrap shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Storefront</span>
-            </button>
+            </a>
           </div>
         </header>
         <main className="flex-1">
@@ -441,43 +498,45 @@ export default function App() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-[#FAF8F4] text-[#0B0B0D]">
-      {/* TOP NAVIGATION BAR — Strict 3-Zone Contract, Zero Admin Link */}
+      {/* TOP NAVIGATION BAR — Real Anchor Links, Zero Admin Link */}
       <header className="sticky top-0 z-40 bg-[#0B0B0D]/95 backdrop-blur-md text-[#FAF8F4] border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[74px] flex items-center justify-between gap-4 sm:gap-8">
           {/* Zone 1: Single-line Wordmark */}
-          <button
-            type="button"
-            onClick={() => navigateTo('home')}
-            className="font-serif text-xl sm:text-2xl font-semibold tracking-tight text-[#FAF8F4] hover:text-[#C6A254] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          <a
+            href="/"
+            onClick={(e) => handleAnchorNav(e, '/')}
+            className="font-serif text-xl sm:text-2xl font-semibold tracking-tight text-[#FAF8F4] hover:text-[#C6A254] transition-colors whitespace-nowrap shrink-0"
           >
             Wealth Fashion
-          </button>
+          </a>
 
-          {/* Zone 2: 4 clean single-line text nav links */}
+          {/* Zone 2: Clean single-line page anchor links */}
           <nav
             aria-label="Primary"
             className="hidden md:flex items-center gap-9 text-[11px] uppercase tracking-[0.18em] font-medium text-[#FAF8F4]/75"
           >
             {publicNavItems.map((item) => {
-              const active = page === item.target;
+              const active =
+                route.page === item.match ||
+                (item.match === 'shop' && route.page === 'product');
               return (
-                <button
-                  key={item.target}
-                  type="button"
-                  onClick={() => navigateTo(item.target)}
-                  className={`py-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b ${
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleAnchorNav(e, item.href)}
+                  className={`py-1.5 transition-colors whitespace-nowrap shrink-0 border-b ${
                     active
                       ? 'text-[#C6A254] border-[#C6A254]'
                       : 'border-transparent hover:text-white hover:border-[#C6A254]/40'
                   }`}
                 >
                   {item.label}
-                </button>
+                </a>
               );
             })}
           </nav>
 
-          {/* Zone 3: 1 primary action (Shopping Bag) + mobile menu button */}
+          {/* Zone 3: Shopping Bag + Mobile Menu Toggle */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               type="button"
@@ -506,18 +565,46 @@ export default function App() {
             aria-label="Mobile navigation"
             className="md:hidden border-t border-white/10 bg-[#0B0B0D] px-4 py-3 flex flex-col"
           >
-            {publicNavItems.map((item) => (
-              <button
-                key={item.target}
-                type="button"
-                onClick={() => navigateTo(item.target)}
-                className={`min-h-[46px] text-left px-2 text-xs uppercase tracking-[0.18em] font-medium border-b border-white/5 ${
-                  page === item.target ? 'text-[#C6A254]' : 'text-[#FAF8F4]/85'
-                }`}
+            {publicNavItems.map((item) => {
+              const active =
+                route.page === item.match ||
+                (item.match === 'shop' && route.page === 'product');
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleAnchorNav(e, item.href)}
+                  className={`min-h-[46px] flex items-center px-2 text-xs uppercase tracking-[0.18em] font-medium border-b border-white/5 ${
+                    active ? 'text-[#C6A254]' : 'text-[#FAF8F4]/85'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+            <div className="pt-2 pb-1 px-2 flex items-center gap-4 text-[11px] uppercase tracking-[0.15em] text-[#FAF8F4]/60">
+              <a
+                href="/shop/clothes"
+                onClick={(e) => handleAnchorNav(e, '/shop/clothes')}
+                className="py-2 hover:text-[#C6A254]"
               >
-                {item.label}
-              </button>
-            ))}
+                Clothes
+              </a>
+              <a
+                href="/shop/shoes"
+                onClick={(e) => handleAnchorNav(e, '/shop/shoes')}
+                className="py-2 hover:text-[#C6A254]"
+              >
+                Shoes
+              </a>
+              <a
+                href="/shop/caps"
+                onClick={(e) => handleAnchorNav(e, '/shop/caps')}
+                className="py-2 hover:text-[#C6A254]"
+              >
+                Caps
+              </a>
+            </div>
           </nav>
         )}
       </header>
@@ -533,561 +620,65 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN CONTENT */}
+      {/* MULTI-PAGE ROUTE VIEWPORT */}
       <main className="flex-1">
-        {page === 'home' && (
-          <>
-            {/* HERO SECTION — Editorial Asymmetric Runway Showcase */}
-            <section className="relative bg-[#0B0B0D] text-[#FAF8F4] overflow-hidden">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 lg:py-0">
-                <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[460px] lg:min-h-[620px]">
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="lg:col-span-5 flex flex-col justify-center py-6 sm:py-8 lg:py-20 lg:pr-10 z-10 order-2 lg:order-1"
-                  >
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
-                      Ibadan Flagship Atelier · Men &amp; Women
-                    </p>
-                    <h1 className="mt-3 sm:mt-4 font-serif text-[clamp(2.35rem,6vw,4.75rem)] font-medium leading-[1.04] tracking-tight text-balance">
-                      Look Rich,{' '}
-                      <span className="italic text-[#D8B973] font-normal">
-                        Feel Confident
-                      </span>
-                    </h1>
-                    <p className="mt-4 sm:mt-6 text-sm sm:text-[15px] text-[#FAF8F4]/75 leading-relaxed max-w-md">
-                      Bespoke black-and-gold Agbada, Italian calfskin footwear, and signature velvet headwear—curated in Bodija, Ibadan for effortless presence.
-                    </p>
-
-                    <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
-                      <button
-                        type="button"
-                        onClick={() => navigateTo('shop', 'All')}
-                        className="min-h-[46px] px-7 py-3 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#C6A254] text-[#0B0B0D] hover:bg-[#D4B36A] active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer"
-                      >
-                        <span>Explore Collection</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setStylistOpen(true)}
-                        className="min-h-[46px] px-5 py-3 text-[11px] uppercase tracking-[0.16em] font-medium text-[#FAF8F4]/90 border border-[#C6A254]/35 sm:border-0 sm:border-b sm:border-[#C6A254]/50 hover:text-[#C6A254] hover:border-[#C6A254] transition-colors inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-[#C6A254]" />
-                        <span>Consult Wealth Stylist</span>
-                      </button>
-                    </div>
-                  </motion.div>
-
-                  <div className="lg:col-span-7 relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[620px] order-1 lg:order-2">
-                    <ResilientImage
-                      src={HERO_IMAGE}
-                      alt="Wealth Fashion Boutique Ibadan luxury black and gold couture couple"
-                      priority
-                      width={1280}
-                      height={720}
-                      className="w-full h-full object-cover object-center"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none hidden lg:block absolute inset-y-0 left-0 w-36 bg-gradient-to-r from-[#0B0B0D] to-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Full-width 4-Column Atelier Strip below Hero */}
-              <div className="border-t border-white/10 bg-[#101014]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:divide-x lg:divide-white/10">
-                  <div className="lg:pr-6">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                      Ibadan Flagship
-                    </p>
-                    <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                      Awolowo Avenue, Bodija
-                    </p>
-                  </div>
-                  <div className="lg:px-6">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                      Three Houses
-                    </p>
-                    <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                      Clothes, Shoes &amp; Headwear
-                    </p>
-                  </div>
-                  <div className="lg:px-6">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                      Express Courier
-                    </p>
-                    <p className="mt-1 text-xs text-[#FAF8F4]/75">
-                      Same-Day Ibadan &amp; Nationwide
-                    </p>
-                  </div>
-                  <div className="lg:pl-6">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#C6A254]">
-                      Direct Concierge
-                    </p>
-                    <p className="mt-1 text-xs text-[#FAF8F4]/75 font-mono">
-                      {BUSINESS_INFO.whatsappDisplay}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* EDITORIAL CATEGORY LOOKBOOK — Asymmetric Mosaic */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-24">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-                    The Boutique Houses
-                  </p>
-                  <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
-                    Curated By Discipline
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('shop', 'All')}
-                  className="min-h-[40px] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B0B0D] hover:text-[#9D7B32] inline-flex items-center gap-2 self-start sm:self-auto cursor-pointer"
-                >
-                  <span>Explore All {products.length} Pieces</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
-                {/* Primary House: Clothes */}
-                <button
-                  type="button"
-                  onClick={() => navigateTo('shop', categoryPreviews[0].title)}
-                  className="group lg:col-span-6 relative aspect-[4/3] lg:aspect-auto lg:min-h-[460px] overflow-hidden bg-[#151519] text-left cursor-pointer"
-                >
-                  <ResilientImage
-                    src={categoryPreviews[0].image}
-                    alt="Clothes at Wealth Fashion Boutique"
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 flex items-end justify-between gap-4 text-[#FAF8F4]">
-                    <div>
-                      <p className="font-serif italic text-sm text-[#C6A254]">
-                        {categoryPreviews[0].index} · {categoryPreviews[0].count} Pieces
-                      </p>
-                      <h3 className="mt-1 font-serif text-2xl sm:text-3xl font-medium">
-                        {categoryPreviews[0].title}
-                      </h3>
-                      <p className="mt-1 text-xs text-[#FAF8F4]/75 max-w-sm">
-                        {categoryPreviews[0].subtitle}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-[#C6A254] shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
-                  </div>
-                </button>
-
-                {/* Secondary Houses: Shoes & Caps */}
-                <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-5 sm:gap-6">
-                  {categoryPreviews.slice(1).map((cat) => (
-                    <button
-                      key={cat.title}
-                      type="button"
-                      onClick={() => navigateTo('shop', cat.title)}
-                      className="group relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[218px] overflow-hidden bg-[#151519] text-left cursor-pointer"
-                    >
-                      <ResilientImage
-                        src={cat.image}
-                        alt={`${cat.title} at Wealth Fashion Boutique`}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex items-end justify-between gap-4 text-[#FAF8F4]">
-                        <div>
-                          <p className="font-serif italic text-sm text-[#C6A254]">
-                            {cat.index} · {cat.count} Pieces
-                          </p>
-                          <h3 className="mt-0.5 font-serif text-2xl font-medium">
-                            {cat.title}
-                          </h3>
-                          <p className="mt-0.5 text-xs text-[#FAF8F4]/75">
-                            {cat.subtitle}
-                          </p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-[#C6A254] shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* BEST SELLERS — Clean Gallery Grid */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-20 lg:pb-24">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-                    Most Requested
-                  </p>
-                  <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
-                    House Best Sellers
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('shop', 'All')}
-                  className="min-h-[44px] px-6 py-2.5 text-[11px] uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] transition-colors self-start sm:self-auto whitespace-nowrap cursor-pointer"
-                >
-                  View Full Catalogue
-                </button>
-              </div>
-
-              <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 sm:gap-y-12">
-                {bestSellers.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onOrderNow={handleOpenOrderNow}
-                    onQuickView={handleOpenQuickView}
-                  />
-                ))}
-              </div>
-            </section>
-
-            {/* WHY SHOP WITH US — Obsidian Editorial Manifesto */}
-            <section className="bg-[#0B0B0D] text-[#FAF8F4] py-16 sm:py-20 lg:py-24">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-                <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-28">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#C6A254] font-semibold">
-                    The Wealth Standard
-                  </p>
-                  <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium leading-[1.08] text-balance">
-                    Tailored for Presence,{' '}
-                    <span className="italic text-[#D8B973] font-normal">
-                      Priced with Integrity
-                    </span>
-                  </h2>
-                  <p className="text-sm text-[#FAF8F4]/70 leading-relaxed max-w-md">
-                    Every silhouette in our Bodija showroom balances rich Nigerian sartorial heritage with understated contemporary finish.
-                  </p>
-                </div>
-
-                <div className="lg:col-span-7 divide-y divide-white/12 border-t border-b border-white/12">
-                  {[
-                    {
-                      num: '01',
-                      title: 'Bespoke Ibadan Tailoring',
-                      body: 'Agbada, Senator suits, and silk kaftans cut from breathable luxury fabrics with crisp metallic gold threadwork.',
-                    },
-                    {
-                      num: '02',
-                      title: 'Affordable Luxury Without Markup',
-                      body: 'Direct-from-atelier pricing in Naira across sizes S–XL and footwear 40–45 for discerning men and women.',
-                    },
-                    {
-                      num: '03',
-                      title: 'Same-Day Ibadan & Global Dispatch',
-                      body: 'Dedicated courier across Bodija, Jericho, Oluyole, and Akobo, plus 48–72 hour tracked delivery nationwide.',
-                    },
-                    {
-                      num: '04',
-                      title: 'AI Stylist + WhatsApp Concierge',
-                      body: 'Instant three-piece outfit curation from Wealth Stylist backed by real fitting support on +234 904 755 2985.',
-                    },
-                  ].map((pillar) => (
-                    <div
-                      key={pillar.num}
-                      className="py-6 sm:py-7 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 items-baseline"
-                    >
-                      <span className="sm:col-span-2 font-serif italic text-2xl text-[#C6A254]">
-                        {pillar.num}.
-                      </span>
-                      <div className="sm:col-span-10 space-y-1.5">
-                        <h3 className="font-sans text-base font-semibold text-[#FAF8F4]">
-                          {pillar.title}
-                        </h3>
-                        <p className="text-sm text-[#FAF8F4]/68 leading-relaxed">
-                          {pillar.body}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* CLIENT TESTIMONIALS — Hairline Broadsheet Quotes */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-24">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-                    Client Voices
-                  </p>
-                  <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-medium text-[#0B0B0D]">
-                    Worn Across Ibadan &amp; Beyond
-                  </h2>
-                </div>
-                <a
-                  href={BUSINESS_INFO.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0B0B0D] hover:text-[#9D7B32]"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>{BUSINESS_INFO.instagramHandle}</span>
-                </a>
-              </div>
-
-              <div className="mt-8 sm:mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-[#E0D9CA]">
-                {TESTIMONIALS.map((t, idx) => (
-                  <blockquote
-                    key={t.name}
-                    className={`flex flex-col justify-between gap-5 pt-6 first:pt-0 md:pt-0 ${
-                      idx === 0
-                        ? 'md:pr-8'
-                        : idx === 1
-                          ? 'md:px-8'
-                          : 'md:pl-8'
-                    }`}
-                  >
-                    <p className="font-serif text-xl italic text-[#1C1917] leading-relaxed">
-                      “{t.quote}”
-                    </p>
-                    <footer>
-                      <p className="text-sm font-semibold text-[#0B0B0D]">
-                        {t.name}
-                      </p>
-                      <p className="text-xs text-[#6B665C]">{t.role}</p>
-                    </footer>
-                  </blockquote>
-                ))}
-              </div>
-            </section>
-          </>
+        {route.page === 'home' && (
+          <HomePage
+            products={products}
+            bestSellers={bestSellers}
+            categoryPreviews={categoryPreviews}
+            onNavigate={navigate}
+            onOpenStylist={() => setStylistOpen(true)}
+            onAddToCart={handleAddToCart}
+            onOrderNow={handleOpenOrderNow}
+          />
         )}
 
-        {/* SHOP / PRODUCTS PAGE */}
-        {page === 'shop' && (
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 lg:py-16 space-y-8 sm:space-y-10"
-          >
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#E0D9CA]">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-                  Wealth Fashion Boutique
-                </p>
-                <h1 className="mt-2 font-serif text-3xl sm:text-5xl font-medium text-[#0B0B0D]">
-                  The Complete Collection
-                </h1>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStylistOpen(true)}
-                className="min-h-[44px] px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] inline-flex items-center gap-2 self-start md:self-auto cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Ask Wealth Stylist</span>
-              </button>
-            </div>
-
-            {/* Minimalist Editorial Filter Strip */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-[#E0D9CA]">
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-                {(['All', 'Clothes', 'Shoes', 'Caps'] as const).map((cat) => {
-                  const active = selectedCategory === cat;
-                  const count =
-                    cat === 'All'
-                      ? products.length
-                      : products.filter((p) => p.category === cat).length;
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`min-h-[42px] px-4 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                        active
-                          ? 'bg-[#0B0B0D] text-[#C6A254]'
-                          : 'bg-transparent text-[#57534E] border border-[#DCD5C7] hover:border-[#0B0B0D] hover:text-[#0B0B0D]'
-                      }`}
-                    >
-                      {cat} ({count})
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <select
-                  value={selectedGender}
-                  onChange={(e) =>
-                    setSelectedGender(e.target.value as 'All' | GenderAudience)
-                  }
-                  aria-label="Filter by collection"
-                  className="min-h-[44px] px-3 py-2 text-base sm:text-xs font-medium bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
-                >
-                  <option value="All">All Collections</option>
-                  <option value="Men">Men</option>
-                  <option value="Women">Women</option>
-                  <option value="Unisex">Unisex</option>
-                </select>
-
-                <div className="relative flex-1 sm:w-64">
-                  <Search
-                    className="w-4 h-4 text-[#78716C] absolute left-3 top-1/2 -translate-y-1/2"
-                    aria-hidden="true"
-                  />
-                  <input
-                    type="search"
-                    placeholder="Search outfits, shoes, caps..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full min-h-[44px] pl-9 pr-3 py-2 text-base sm:text-xs bg-white border border-[#DCD5C7] focus:border-[#0B0B0D] focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {filteredProducts.length === 0 ? (
-              <div className="py-16 text-center space-y-3 border-b border-[#E0D9CA]">
-                <p className="font-serif text-3xl text-[#0B0B0D]">
-                  No pieces matched your filter
-                </p>
-                <p className="text-sm text-[#57534E]">
-                  Try clearing your search or switching back to all categories.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory('All');
-                    setSelectedGender('All');
-                    setSearchQuery('');
-                  }}
-                  className="mt-2 min-h-[44px] px-6 py-2.5 text-xs uppercase tracking-widest font-semibold bg-[#0B0B0D] text-[#C6A254] cursor-pointer"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 sm:gap-y-12">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onOrderNow={handleOpenOrderNow}
-                    onQuickView={handleOpenQuickView}
-                  />
-                ))}
-              </div>
-            )}
-          </motion.section>
-        )}
-
-        {/* ABOUT PAGE */}
-        {page === 'about' && (
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24 space-y-16 sm:space-y-20"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-              <div className="lg:col-span-6 space-y-5 sm:space-y-6">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#9D7B32] font-semibold">
-                  Our Story · Ibadan, Nigeria
-                </p>
-                <h1 className="font-serif text-3xl sm:text-5xl font-medium text-[#0B0B0D] leading-[1.08] text-balance">
-                  Affordable Luxury Fashion for Everyone
-                </h1>
-                <p className="text-base text-[#44403C] leading-relaxed">
-                  Founded in Ibadan, <strong>Wealth Fashion Boutique</strong> was born from a simple conviction: stepping into a room looking sharp, poised, and unforgettable should never require an unattainable price tag.
-                </p>
-                <p className="text-base text-[#44403C] leading-relaxed">
-                  From bespoke black-and-gold Agbada and crisp Senator attire to Italian calfskin footwear and hand-woven velvet Fila caps, every piece in our Bodija showroom is curated for men and women who value quiet power and unmistakable craftsmanship.
-                </p>
-                <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('shop', 'All')}
-                    className="min-h-[46px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-semibold bg-[#0B0B0D] text-[#C6A254] hover:bg-[#1E1E24] cursor-pointer"
-                  >
-                    Shop the Collection
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('contact')}
-                    className="min-h-[46px] px-7 py-2.5 text-xs uppercase tracking-[0.18em] font-medium border border-[#0B0B0D] text-[#0B0B0D] hover:bg-white cursor-pointer"
-                  >
-                    Book a Fitting
-                  </button>
-                </div>
-              </div>
-
-              <div className="lg:col-span-6">
-                <div className="aspect-[4/3] overflow-hidden bg-[#151519]">
-                  <ResilientImage
-                    src={ATELIER_IMAGE}
-                    alt="Wealth Fashion Boutique luxury showroom in Bodija Ibadan"
-                    priority
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-[#E0D9CA] pt-12 border-t border-[#E0D9CA]">
-              <div className="pt-6 first:pt-0 md:pt-0 md:pr-8">
-                <p className="font-serif italic text-xl text-[#9D7B32]">01. Apparel</p>
-                <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
-                  Tailored Clothes
-                </h2>
-                <p className="mt-3 text-sm text-[#57534E] leading-relaxed">
-                  Sizes S through XL crafted in breathable wool, velvet, cashmere, and silk for weddings, boardrooms, and Ibadan evenings.
-                </p>
-              </div>
-              <div className="pt-6 md:pt-0 md:px-8">
-                <p className="font-serif italic text-xl text-[#9D7B32]">02. Footwear</p>
-                <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
-                  Signature Shoes
-                </h2>
-                <p className="mt-3 text-sm text-[#57534E] leading-relaxed">
-                  Sizes 40 to 45 spanning double monk-straps, gold-crest loafers, court sneakers, Chelsea boots, and chain-trim heels.
-                </p>
-              </div>
-              <div className="pt-6 md:pt-0 md:pl-8">
-                <p className="font-serif italic text-xl text-[#9D7B32]">03. Headwear</p>
-                <h2 className="mt-2 font-serif text-3xl font-medium text-[#0B0B0D]">
-                  Crowning Caps
-                </h2>
-                <p className="mt-3 text-sm text-[#57534E] leading-relaxed">
-                  Rich Nigerian velvet Fila, bullion wool caps, crisp alabaster snapbacks, and leather-trimmed fedoras in signature colourways.
-                </p>
-              </div>
-            </div>
-          </motion.section>
-        )}
-
-        {/* CONTACT PAGE */}
-        {page === 'contact' && (
+        {route.page !== 'home' && (
           <Suspense
             fallback={
               <div className="max-w-7xl mx-auto px-6 py-24 text-center text-sm text-[#6B665C]">
-                Loading contact concierge...
+                Loading page...
               </div>
             }
           >
-            <ContactSection products={products} />
+            {route.page === 'shop' && (
+              <ShopPage
+                products={products}
+                selectedCategory={route.category}
+                onSelectCategory={(cat) =>
+                  navigate(cat === 'All' ? '/shop' : `/shop/${cat.toLowerCase()}`)
+                }
+                onNavigate={navigate}
+                onOpenStylist={() => setStylistOpen(true)}
+                onAddToCart={handleAddToCart}
+                onOrderNow={handleOpenOrderNow}
+              />
+            )}
+
+            {route.page === 'product' && (
+              <ProductDetailPage
+                product={activeProduct}
+                allProducts={products}
+                onNavigate={navigate}
+                onAddToCart={handleAddToCart}
+                onOrderNow={handleOpenOrderNow}
+              />
+            )}
+
+            {route.page === 'about' && <AboutPage onNavigate={navigate} />}
+
+            {route.page === 'contact' && (
+              <ContactPage products={products} onNavigate={navigate} />
+            )}
           </Suspense>
         )}
       </main>
 
-      {/* FOOTER — Public Links Only, Zero Admin Exposure */}
+      {/* FOOTER — Public Page & Category Links Only, Zero Admin Exposure */}
       <footer className="bg-[#0B0B0D] text-[#FAF8F4] border-t border-[#C6A254]/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-14 grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10">
-          <div className="md:col-span-5 space-y-3">
+          <div className="md:col-span-4 space-y-3">
             <p className="font-serif text-2xl sm:text-3xl font-medium text-[#FAF8F4]">
               Wealth Fashion Boutique
             </p>
@@ -1096,21 +687,50 @@ export default function App() {
             </p>
           </div>
 
-          <div className="md:col-span-3 space-y-3 text-sm">
+          <div className="md:col-span-2 space-y-3 text-sm">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
-              Boutique
+              Pages
             </p>
             <div className="flex flex-col gap-1 text-[#FAF8F4]/75">
               {publicNavItems.map((item) => (
-                <button
-                  key={item.target}
-                  type="button"
-                  onClick={() => navigateTo(item.target)}
-                  className="min-h-[38px] text-left hover:text-[#C6A254] transition-colors cursor-pointer"
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleAnchorNav(e, item.href)}
+                  className="min-h-[38px] flex items-center hover:text-[#C6A254] transition-colors"
                 >
                   {item.label}
-                </button>
+                </a>
               ))}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 space-y-3 text-sm">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#C6A254] font-semibold">
+              Houses
+            </p>
+            <div className="flex flex-col gap-1 text-[#FAF8F4]/75">
+              <a
+                href="/shop/clothes"
+                onClick={(e) => handleAnchorNav(e, '/shop/clothes')}
+                className="min-h-[38px] flex items-center hover:text-[#C6A254] transition-colors"
+              >
+                Clothes
+              </a>
+              <a
+                href="/shop/shoes"
+                onClick={(e) => handleAnchorNav(e, '/shop/shoes')}
+                className="min-h-[38px] flex items-center hover:text-[#C6A254] transition-colors"
+              >
+                Shoes
+              </a>
+              <a
+                href="/shop/caps"
+                onClick={(e) => handleAnchorNav(e, '/shop/caps')}
+                className="min-h-[38px] flex items-center hover:text-[#C6A254] transition-colors"
+              >
+                Caps
+              </a>
             </div>
           </div>
 
@@ -1122,7 +742,9 @@ export default function App() {
             <p>
               WhatsApp:{' '}
               <a
-                href={buildWhatsAppUrl('Hello Wealth Fashion Boutique, I would like to place an order.')}
+                href={buildWhatsAppUrl(
+                  'Hello Wealth Fashion Boutique, I would like to place an order.'
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#C6A254] hover:underline font-mono"
@@ -1148,7 +770,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* ALWAYS-VISIBLE FLOATING ACTION PAIR (hidden when a drawer/modal is open on mobile) */}
+      {/* ALWAYS-VISIBLE FLOATING ACTION PAIR */}
       {!anyOverlayOpen && (
         <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2">
           <button
@@ -1199,16 +821,6 @@ export default function App() {
               setStylistOpen(false);
               handleOpenOrderNow(prod, opt);
             }}
-          />
-        )}
-
-        {quickViewState.product && (
-          <ProductQuickViewModal
-            product={quickViewState.product}
-            initialOption={quickViewState.option}
-            onClose={() => setQuickViewState({ product: null, option: '' })}
-            onAddToCart={handleAddToCart}
-            onOrderNow={handleOpenOrderNow}
           />
         )}
 

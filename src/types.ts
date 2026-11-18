@@ -2,7 +2,7 @@ export type ProductCategory = 'Clothes' | 'Shoes' | 'Caps';
 export type GenderAudience = 'Men' | 'Women' | 'Unisex';
 export type OrderStatus = 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered';
 export type EnquiryStatus = 'New Enquiry' | 'Replied';
-export type PageView = 'home' | 'shop' | 'about' | 'contact' | 'admin';
+export type PageView = 'home' | 'shop' | 'product' | 'about' | 'contact' | 'admin';
 
 export interface Product {
   id: string;

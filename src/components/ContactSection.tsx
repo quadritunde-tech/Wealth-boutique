@@ -88,7 +88,7 @@ export function ContactSection({ products }: ContactSectionProps) {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16 lg:py-24">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-16 lg:pt-10 lg:pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Left: Atelier Details */}
         <div className="lg:col-span-5 space-y-8">

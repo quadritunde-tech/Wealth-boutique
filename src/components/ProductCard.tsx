@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, ShoppingBag } from 'lucide-react';
+import { ArrowUpRight, ShoppingBag } from 'lucide-react';
 import { Product } from '../types.ts';
 import { formatNaira } from '../utils/format.ts';
 import { ResilientImage } from './ResilientImage.tsx';
@@ -8,14 +8,14 @@ interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product, selectedOption: string) => void;
   onOrderNow: (product: Product, selectedOption: string) => void;
-  onQuickView?: (product: Product, selectedOption: string) => void;
+  onNavigate: (path: string) => void;
 }
 
 export function ProductCard({
   product,
   onAddToCart,
   onOrderNow,
-  onQuickView,
+  onNavigate,
 }: ProductCardProps) {
   const [selectedOption, setSelectedOption] = useState<string>(
     product.options[0] || 'Standard'
@@ -28,6 +28,15 @@ export function ProductCard({
     }
   }, [product.options, selectedOption]);
 
+  const productHref = `/product/${product.id}`;
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      onNavigate(productHref);
+    }
+  };
+
   const handleAdd = () => {
     onAddToCart(product, selectedOption);
     setJustAdded(true);
@@ -36,13 +45,13 @@ export function ProductCard({
 
   return (
     <article className="group flex flex-col">
-      {/* Studio Image Frame */}
+      {/* Studio Image Frame — Links to dedicated Product Detail Page */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#EFECE4]">
-        <button
-          type="button"
-          onClick={() => onQuickView?.(product, selectedOption)}
-          aria-label={`Inspect ${product.name}`}
-          className="block w-full h-full text-left cursor-pointer"
+        <a
+          href={productHref}
+          onClick={handleLinkClick}
+          aria-label={`View ${product.name} details`}
+          className="block w-full h-full"
         >
           <ResilientImage
             src={product.image}
@@ -52,10 +61,10 @@ export function ProductCard({
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           <span className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-medium text-[#FAF8F4] opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-            <Eye className="w-3.5 h-3.5 text-[#C6A254]" aria-hidden="true" />
-            <span>Quick View</span>
+            <span>View Piece</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#C6A254]" aria-hidden="true" />
           </span>
-        </button>
+        </a>
       </div>
 
       {/* Editorial Metadata & Controls */}
@@ -74,13 +83,13 @@ export function ProductCard({
         </div>
 
         <div className="mt-1.5 flex items-baseline justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => onQuickView?.(product, selectedOption)}
-            className="text-left font-serif text-xl font-semibold text-[#0B0B0D] leading-snug hover:text-[#9D7B32] transition-colors line-clamp-1 cursor-pointer"
+          <a
+            href={productHref}
+            onClick={handleLinkClick}
+            className="text-left font-serif text-xl font-semibold text-[#0B0B0D] leading-snug hover:text-[#9D7B32] transition-colors line-clamp-1"
           >
             {product.name}
-          </button>
+          </a>
           <span className="font-mono text-sm font-medium text-[#0B0B0D] tabular-nums shrink-0">
             {formatNaira(product.price)}
           </span>
